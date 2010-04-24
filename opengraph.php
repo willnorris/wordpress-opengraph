@@ -54,6 +54,9 @@ function opengraph_default_metadata() {
 	add_filter('opengraph_metadata_og:type', 'opengraph_default_type', 5);
 	add_filter('opengraph_metadata_og:image', 'opengraph_default_image', 5);
 	add_filter('opengraph_metadata_og:url', 'opengraph_default_url', 5);
+
+	add_filter('opengraph_metadata_og:site_name', 'opengraph_default_sitename', 5);
+	add_filter('opengraph_metadata_og:description', 'opengraph_default_description', 5);
 }
 add_filter('wp', 'opengraph_default_metadata');
 
@@ -102,6 +105,24 @@ function opengraph_default_image( $image ) {
 function opengraph_default_url( $url ) {
 	if ( empty($url) ) $url = get_permalink();
 	return $url;
+}
+
+
+/**
+ * Default site_name property.
+ */
+function opengraph_default_sitename( $name ) {
+	if ( empty($name) ) $name = get_bloginfo('name');
+	return $name;
+}
+
+
+/**
+ * Default description property.
+ */
+function opengraph_default_description( $description ) {
+	if ( empty($description) ) $description = get_bloginfo('description');
+	return $description;
 }
 
 

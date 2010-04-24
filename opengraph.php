@@ -22,7 +22,7 @@ function opengraph_add_namespace( $output ) {
 	global $opengraph_ns_set;
 	$opengraph_ns_set = true;
 
-	$output .= ' xmlns:og="' . OPENGRAPH_NS_URI . '"';
+	$output .= ' xmlns:og="' . esc_attr(OPENGRAPH_NS_URI) . '"';
 	return $output;
 }
 add_filter('language_attributes', 'opengraph_add_namespace');
@@ -36,7 +36,7 @@ add_filter('language_attributes', 'opengraph_add_namespace');
 function opengraph_metadata() {
 	$metadata = array();
 
-	$properties = array('og:title', 'og:type', 'og:image', 'og:url');
+	$properties = array('og:title', 'og:type', 'og:image', 'og:url', 'og:site_name', 'og:description');
 	foreach ($properties as $property) {
 		$filter = 'opengraph_metadata_' . $property;
 		$metadata[$property] = apply_filters($filter, '');
@@ -49,11 +49,60 @@ function opengraph_metadata() {
 /**
  * Register filters for default Open Graph metadata.
  */
-function opengraph_default_metadata( $metadata ) {
-	add_filter('opengraph_metadata_og:type', 
-		create_function('$v', 'return empty($v) ? "blog" : $v;'), 5);
+function opengraph_default_metadata() {
+	add_filter('opengraph_metadata_og:title', 'opengraph_default_title', 5);
+	add_filter('opengraph_metadata_og:type', 'opengraph_default_type', 5);
+	add_filter('opengraph_metadata_og:image', 'opengraph_default_image', 5);
+	add_filter('opengraph_metadata_og:url', 'opengraph_default_url', 5);
 }
 add_filter('wp', 'opengraph_default_metadata');
+
+
+/**
+ * Default title property.
+ */
+function opengraph_default_title( $title ) {
+	if ( is_singular() && empty($title) ) {
+		global $post;
+		$title = $post->post_title;
+	}
+
+	return $title;
+}
+
+
+/**
+ * Default type property.
+ */
+function opengraph_default_type( $type ) {
+	if ( empty($type) ) $type = 'blog';
+	return $type;
+}
+
+
+/**
+ * Default image property.
+ */
+function opengraph_default_image( $image ) {
+	global $post;
+	if ( is_singular() && empty($image) && has_post_thumbnail($post->ID) ) {
+		$thumbnail = wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), 'post-thumbnail');
+		if ($thumbnail) {
+			$image = $thumbnail[0];
+		}
+	}
+
+	return $image;
+}
+
+
+/**
+ * Default url property.
+ */
+function opengraph_default_url( $url ) {
+	if ( empty($url) ) $url = get_permalink();
+	return $url;
+}
 
 
 /**
@@ -64,13 +113,13 @@ function opengraph_meta_tags() {
 
 	$xml_ns = '';
 	if ( !$opengraph_ns_set ) {
-		$xml_ns = 'xmlns:og="' . OPENGRAPH_NS_URI . '" ';
+		$xml_ns = 'xmlns:og="' . esc_attr(OPENGRAPH_NS_URI) . '" ';
 	}
 
 	$metadata = opengraph_metadata();
 	foreach ( $metadata as $key => $value ) {
 		if (empty($key) || empty($value)) continue;
-		echo '<meta ' . $xml_ns . 'property="' . $key . '" content="' . $value . '" />' . "\n";
+		echo '<meta ' . $xml_ns . 'property="' . esc_attr($key) . '" content="' . esc_attr($value) . '" />' . "\n";
 	}
 }
 add_action('wp_head', 'opengraph_meta_tags');

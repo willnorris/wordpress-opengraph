@@ -31,15 +31,31 @@ add_filter('language_attributes', 'opengraph_add_namespace');
 /**
  * Get the Open Graph metadata for the current page.
  *
+ * @uses apply_filters() Calls 'opengraph_{$name}' for each property name
  * @uses apply_filters() Calls 'opengraph_metadata' before returning metadata array
  */
 function opengraph_metadata() {
 	$metadata = array();
 
-	$properties = array('og:title', 'og:type', 'og:image', 'og:url', 'og:site_name', 'og:description');
+ 	// defualt properties defined at http://opengraphprotocol.org/
+	$properties = array(
+		// required
+		'title', 'type', 'image', 'url', 
+
+		// optional
+		'site_name', 'description', 
+
+		// location
+		'longitude', 'latitude', 'street-address', 'locality', 'region', 
+		'postal-code', 'country-name',
+
+		// contact
+		'email', 'phone_number', 'fax_number',
+	);
+
 	foreach ($properties as $property) {
-		$filter = 'opengraph_metadata_' . $property;
-		$metadata[$property] = apply_filters($filter, '');
+		$filter = 'opengraph_' . $property;
+		$metadata["og:$property"] = apply_filters($filter, '');
 	}
 
 	return apply_filters('opengraph_metadata', $metadata);
@@ -50,19 +66,19 @@ function opengraph_metadata() {
  * Register filters for default Open Graph metadata.
  */
 function opengraph_default_metadata() {
-	add_filter('opengraph_metadata_og:title', 'opengraph_default_title', 5);
-	add_filter('opengraph_metadata_og:type', 'opengraph_default_type', 5);
-	add_filter('opengraph_metadata_og:image', 'opengraph_default_image', 5);
-	add_filter('opengraph_metadata_og:url', 'opengraph_default_url', 5);
+	add_filter('opengraph_title', 'opengraph_default_title', 5);
+	add_filter('opengraph_type', 'opengraph_default_type', 5);
+	add_filter('opengraph_image', 'opengraph_default_image', 5);
+	add_filter('opengraph_url', 'opengraph_default_url', 5);
 
-	add_filter('opengraph_metadata_og:site_name', 'opengraph_default_sitename', 5);
-	add_filter('opengraph_metadata_og:description', 'opengraph_default_description', 5);
+	add_filter('opengraph_site_name', 'opengraph_default_sitename', 5);
+	add_filter('opengraph_description', 'opengraph_default_description', 5);
 }
 add_filter('wp', 'opengraph_default_metadata');
 
 
 /**
- * Default title property.
+ * Default title property, using the page title.
  */
 function opengraph_default_title( $title ) {
 	if ( is_singular() && empty($title) ) {
@@ -84,7 +100,7 @@ function opengraph_default_type( $type ) {
 
 
 /**
- * Default image property.
+ * Default image property, using the post-thumbnail.
  */
 function opengraph_default_image( $image ) {
 	global $post;
@@ -100,7 +116,7 @@ function opengraph_default_image( $image ) {
 
 
 /**
- * Default url property.
+ * Default url property, using the permalink for the page.
  */
 function opengraph_default_url( $url ) {
 	if ( empty($url) ) $url = get_permalink();
@@ -109,7 +125,7 @@ function opengraph_default_url( $url ) {
 
 
 /**
- * Default site_name property.
+ * Default site_name property, using the bloginfo name.
  */
 function opengraph_default_sitename( $name ) {
 	if ( empty($name) ) $name = get_bloginfo('name');
@@ -118,7 +134,7 @@ function opengraph_default_sitename( $name ) {
 
 
 /**
- * Default description property.
+ * Default description property, using the bloginfo description.
  */
 function opengraph_default_description( $description ) {
 	if ( empty($description) ) $description = get_bloginfo('description');
@@ -139,7 +155,7 @@ function opengraph_meta_tags() {
 
 	$metadata = opengraph_metadata();
 	foreach ( $metadata as $key => $value ) {
-		if (empty($key) || empty($value)) continue;
+		if ( empty($key) || empty($value) ) continue;
 		echo '<meta ' . $xml_ns . 'property="' . esc_attr($key) . '" content="' . esc_attr($value) . '" />' . "\n";
 	}
 }

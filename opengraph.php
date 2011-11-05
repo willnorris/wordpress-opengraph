@@ -104,10 +104,12 @@ function opengraph_default_type( $type ) {
  */
 function opengraph_default_image( $image ) {
   global $post;
-  if ( is_singular() && empty($image) && has_post_thumbnail($post->ID) ) {
-    $thumbnail = wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), 'post-thumbnail');
-    if ($thumbnail) {
-      $image = $thumbnail[0];
+  if ( function_exists('has_post_thumbnail') ) {
+    if ( is_singular() && empty($image) && has_post_thumbnail($post->ID) ) {
+      $thumbnail = wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), 'post-thumbnail');
+      if ($thumbnail) {
+        $image = $thumbnail[0];
+      }
     }
   }
 

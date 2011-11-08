@@ -1,8 +1,8 @@
 === Open Graph ===
 Contributors: willnorris
 Tags: social, opengraph, facebook
-Tested up to: 3.0
-Stable tag: trunk
+Tested up to: 3.2.1
+Stable tag: 1.1
 
 Add Open Graph metadata to your pages.
 
@@ -55,3 +55,11 @@ Note that it is your responsibility to make sure that the XML namespace is regis
 prefix that you use.  To see one method for doing this, see the `opengraph_add_namespace` function
 in the Open Graph plugin.
 
+
+== Changelog ==
+
+= version 1.1 (Nov 7, 2011) =
+ - fix function undefined error when theme doesn't support post thumbnails
+
+= version 1.0 (Apr 24, 2010) =
+ - initial public release

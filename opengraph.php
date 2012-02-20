@@ -5,13 +5,13 @@
  Description: Adds Open Graph metadata to your pages
  Author: Will Norris
  Author URI: http://willnorris.com/
- Version: 1.1
+ Version: 1.2
  License: Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.html)
  Text Domain: opengraph
  */
 
 
-define('OPENGRAPH_NS_URI', 'http://opengraphprotocol.org/schema/');
+define('OPENGRAPH_NS_URI', 'http://ogp.me/ns#');
 $opengraph_ns_set = false;
 
 
@@ -21,8 +21,12 @@ $opengraph_ns_set = false;
 function opengraph_add_namespace( $output ) {
   global $opengraph_ns_set;
   $opengraph_ns_set = true;
-
-  $output .= ' xmlns:og="' . esc_attr(OPENGRAPH_NS_URI) . '"';
+  
+  if (preg_match('~(prefix\s*=\s*[\"|\'])~', $output)) {
+    $output = preg_replace('~(prefix\s*=\s*[\"|\'])~', '${1}og: ' . esc_attr(OPENGRAPH_NS_URI) . ' ', $output);
+  } else {
+    $output .= ' prefix="og: ' . esc_attr(OPENGRAPH_NS_URI) . '"';
+  }
   return $output;
 }
 add_filter('language_attributes', 'opengraph_add_namespace');
@@ -152,7 +156,7 @@ function opengraph_meta_tags() {
 
   $xml_ns = '';
   if ( !$opengraph_ns_set ) {
-    $xml_ns = 'xmlns:og="' . esc_attr(OPENGRAPH_NS_URI) . '" ';
+    $xml_ns = 'prefix="og: ' . esc_attr(OPENGRAPH_NS_URI) . '" ';
   }
 
   $metadata = opengraph_metadata();

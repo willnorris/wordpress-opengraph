@@ -1,8 +1,8 @@
 === Open Graph ===
 Contributors: willnorris
 Tags: social, opengraph, facebook
-Tested up to: 3.2.1
-Stable tag: 1.1
+Tested up to: 3.3.1
+Stable tag: 1.2
 
 Add Open Graph metadata to your pages.
 

@@ -5,27 +5,31 @@
  Description: Adds Open Graph metadata to your pages
  Author: Will Norris
  Author URI: http://willnorris.com/
- Version: 1.1
+ Version: 1.2
  License: Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.html)
  Text Domain: opengraph
  */
 
 
-define('OPENGRAPH_NS_URI', 'http://opengraphprotocol.org/schema/');
-$opengraph_ns_set = false;
+define('OPENGRAPH_PREFIX_URI', 'http://ogp.me/ns#');
+$opengraph_prefix_set = false;
 
 
 /**
- * Add Open Graph XML namespace to <html> element.
+ * Add Open Graph XML prefix to <html> element.
  */
-function opengraph_add_namespace( $output ) {
-  global $opengraph_ns_set;
-  $opengraph_ns_set = true;
-
-  $output .= ' xmlns:og="' . esc_attr(OPENGRAPH_NS_URI) . '"';
+function opengraph_add_prefix( $output ) {
+  global $opengraph_prefix_set;
+  $opengraph_prefix_set = true;
+  
+  if (preg_match('/(prefix\s*=\s*[\"|\'])/i', $output)) {
+    $output = preg_replace('/(prefix\s*=\s*[\"|\'])/i', '${1}og: ' . esc_attr(OPENGRAPH_PREFIX_URI) . ' ', $output);
+  } else {
+    $output .= ' prefix="og: ' . esc_attr(OPENGRAPH_PREFIX_URI) . '"';
+  }
   return $output;
 }
-add_filter('language_attributes', 'opengraph_add_namespace');
+add_filter('language_attributes', 'opengraph_add_prefix');
 
 
 /**
@@ -148,17 +152,17 @@ function opengraph_default_description( $description ) {
  * Output Open Graph <meta> tags in the page header.
  */
 function opengraph_meta_tags() {
-  global $opengraph_ns_set;
+  global $opengraph_prefix_set;
 
-  $xml_ns = '';
-  if ( !$opengraph_ns_set ) {
-    $xml_ns = 'xmlns:og="' . esc_attr(OPENGRAPH_NS_URI) . '" ';
+  $prefix = '';
+  if ( !$opengraph_prefix_set ) {
+    $prefix = 'prefix="og: ' . esc_attr(OPENGRAPH_PREFIX_URI) . '" ';
   }
 
   $metadata = opengraph_metadata();
   foreach ( $metadata as $key => $value ) {
     if ( empty($key) || empty($value) ) continue;
-    echo '<meta ' . $xml_ns . 'property="' . esc_attr($key) . '" content="' . esc_attr($value) . '" />' . "\n";
+    echo '<meta ' . $prefix . 'property="' . esc_attr($key) . '" content="' . esc_attr($value) . '" />' . "\n";
   }
 }
 add_action('wp_head', 'opengraph_meta_tags');

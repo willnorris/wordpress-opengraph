@@ -8,15 +8,16 @@ Add Open Graph metadata to your pages.
 
 == Description ==
 
-The [Open Graph Protocol][] defines a mechanism for adding additional metadata to webpages to
-identify them as "social objects".  Most notably, this allows for these pages to be used with
-the [Facebook Like Button][].  This plugin inserts the Open Graph metadata into WordPress posts
-and pages, and provides a simple extension mechansim for other plugins to override this data,
-or to provide additional Open Graph data.
+The [Open Graph Protocol][] defines a mechanism for adding additional metadata
+to webpages to identify them as "social objects".  Most notably, this allows
+for these pages to be used with the [Facebook Like Button][].  This plugin
+inserts the Open Graph metadata into WordPress posts and pages, and provides a
+simple extension mechansim for other plugins to override this data, or to
+provide additional Open Graph data.
 
-Note that this plugin does not actually add the Facebook Like Button to your pages, or do
-anything directly with the Open Graph data.  It makes the data available so that other services
-can do interesting things with it.
+Note that this plugin does not actually add the Facebook Like Button to your
+pages, or do anything directly with the Open Graph data.  It makes the data
+available so that other services can do interesting things with it.
 
 [Open Graph Protocol]: http://opengraphprotocol.org/
 [Facebook Like Button]: http://developers.facebook.com/docs/reference/plugins/like
@@ -26,10 +27,11 @@ can do interesting things with it.
 
 = How do I extend the Open Graph plugin? =
 
-There are two main ways to provide Open Graph metadata from your plugin or theme.  First, you can
-implement the filter for a specific property.  These filters are of the form `opengraph_{name}`
-where {name} is the unqualified Open Graph property name.  For example, if you have a plugin that
-defines a custom post type named "movie", you could override the Open Graph 'type' property for
+There are two main ways to provide Open Graph metadata from your plugin or
+theme.  First, you can implement the filter for a specific property.  These
+filters are of the form `opengraph_{name}` where {name} is the unqualified Open
+Graph property name.  For example, if you have a plugin that defines a custom
+post type named "movie", you could override the Open Graph 'type' property for
 those posts using a function like:
 
   function my_og_type( $type ) {
@@ -40,10 +42,10 @@ those posts using a function like:
   }
   add_filter( 'opengraph_type', 'my_og_type' );
 
-This will work for all of the core Open Graph properties.  However, if you want to add a custom
-property, such as 'fb:admin', then you would need to hook into the `opengraph_metadata` filter.
-This filter is passed an associative array, whose keys are the qualified Open Graph property names.
-For example:
+This will work for all of the core Open Graph properties.  However, if you want
+to add a custom property, such as 'fb:admin', then you would need to hook into
+the `opengraph_metadata` filter.  This filter is passed an associative array,
+whose keys are the qualified Open Graph property names.  For example:
 
   function my_og_metadata( $metadata ) {
       $metadata['fb:admin'] = '12345,67890';
@@ -51,12 +53,16 @@ For example:
   }
   add_filter( 'opengraph_metadata', 'my_og_metadata' );
 
-Note that it is your responsibility to make sure that the XML namespace is registered for the
-prefix that you use.  To see one method for doing this, see the `opengraph_add_namespace` function
-in the Open Graph plugin.
+Note that it is your responsibility to make sure that the XML namespace is
+registered for the prefix that you use.  To see one method for doing this, see
+the `opengraph_add_namespace` function in the Open Graph plugin.
 
 
 == Changelog ==
+
+= version 1.2 (Feb 21, 2012) =
+ - switch to newer RDFa prefix syntax rather than XML namespaces (props
+   pfefferle) 
 
 = version 1.1 (Nov 7, 2011) =
  - fix function undefined error when theme doesn't support post thumbnails

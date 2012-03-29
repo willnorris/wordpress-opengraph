@@ -144,8 +144,8 @@ function opengraph_default_sitename( $name ) {
  * Default description property, using the bloginfo description.
  */
 function opengraph_default_description( $description ) {
-  global $post;
   if ( is_singular() && empty($description) ) {
+    global $post;
     $description = wp_trim_words( strip_shortcodes($post->post_content), 25, '...' );
   } elseif ( empty($description) ) {
     $description = get_bloginfo('description');

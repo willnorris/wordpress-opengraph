@@ -174,7 +174,13 @@ function opengraph_meta_tags() {
   $metadata = opengraph_metadata();
   foreach ( $metadata as $key => $value ) {
     if ( empty($key) || empty($value) ) continue;
-    echo '<meta property="' . esc_attr($key) . '" content="' . esc_attr($value) . '" />' . "\n";
+    if ( is_array( $value ) ) {
+      foreach ( $value as $v ) {
+        echo '<meta property="' . esc_attr($key) . '" content="' . esc_attr($v) . '" />' . "\n";
+      }
+    } else {
+      echo '<meta property="' . esc_attr($key) . '" content="' . esc_attr($value) . '" />' . "\n";
+    }
   }
 }
 add_action('wp_head', 'opengraph_meta_tags');

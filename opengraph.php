@@ -24,7 +24,7 @@ function opengraph_add_prefix( $output ) {
   $prefixes = array(
     'og' => OPENGRAPH_PREFIX_URI
   );
-  $namespaces = apply_filters('opengraph_prefixes', $prefixes);
+  $prefixes = apply_filters('opengraph_prefixes', $prefixes);
 
   $prefix_str = '';
   foreach( $prefixes as $k => $v ) {

@@ -19,9 +19,6 @@ $opengraph_prefix_set = false;
  * Add Open Graph XML prefix to <html> element.
  */
 function opengraph_add_prefix( $output ) {
-  global $opengraph_prefix_set;
-  $opengraph_prefix_set = true;
-  
   if (preg_match('/(prefix\s*=\s*[\"|\'])/i', $output)) {
     $output = preg_replace('/(prefix\s*=\s*[\"|\'])/i', '${1}og: ' . esc_attr(OPENGRAPH_PREFIX_URI) . ' ', $output);
   } else {
@@ -158,17 +155,10 @@ function opengraph_default_description( $description ) {
  * Output Open Graph <meta> tags in the page header.
  */
 function opengraph_meta_tags() {
-  global $opengraph_prefix_set;
-
-  $prefix = '';
-  if ( !$opengraph_prefix_set ) {
-    $prefix = 'prefix="og: ' . esc_attr(OPENGRAPH_PREFIX_URI) . '" ';
-  }
-
   $metadata = opengraph_metadata();
   foreach ( $metadata as $key => $value ) {
     if ( empty($key) || empty($value) ) continue;
-    echo '<meta ' . $prefix . 'property="' . esc_attr($key) . '" content="' . esc_attr($value) . '" />' . "\n";
+    echo '<meta property="' . esc_attr($key) . '" content="' . esc_attr($value) . '" />' . "\n";
   }
 }
 add_action('wp_head', 'opengraph_meta_tags');

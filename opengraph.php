@@ -57,14 +57,7 @@ function opengraph_metadata() {
     'title', 'type', 'image', 'url',
 
     // optional
-    'site_name', 'description',
-
-    // location
-    'longitude', 'latitude', 'street-address', 'locality', 'region',
-    'postal-code', 'country-name',
-
-    // contact
-    'email', 'phone_number', 'fax_number',
+    'audio', 'description', 'determiner', 'locale', 'site_name', 'video',
   );
 
   foreach ($properties as $property) {
@@ -84,8 +77,9 @@ function opengraph_default_metadata() {
   add_filter('opengraph_image', 'opengraph_default_image', 5);
   add_filter('opengraph_url', 'opengraph_default_url', 5);
 
-  add_filter('opengraph_site_name', 'opengraph_default_sitename', 5);
   add_filter('opengraph_description', 'opengraph_default_description', 5);
+  add_filter('opengraph_locale', 'opengraph_default_locale', 5);
+  add_filter('opengraph_site_name', 'opengraph_default_sitename', 5);
 }
 add_filter('wp', 'opengraph_default_metadata');
 
@@ -161,6 +155,15 @@ function opengraph_default_description( $description ) {
     $description = get_bloginfo('description');
   }
   return $description;
+}
+
+
+/**
+ * Default locale property, using the WordPress locale.
+ */
+function opengraph_default_locale( $locale ) {
+  if ( empty($locale) ) $locale = get_locale();
+  return $locale;
 }
 
 

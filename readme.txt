@@ -1,7 +1,7 @@
 === Open Graph ===
 Contributors: willnorris
 Tags: social, opengraph, facebook
-Requires at least: 2.1
+Requires at least: 2.3
 Tested up to: 3.3.2
 Stable tag: 1.2
 

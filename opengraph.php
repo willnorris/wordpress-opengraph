@@ -149,8 +149,12 @@ function opengraph_default_sitename( $name ) {
  */
 function opengraph_default_description( $description ) {
   if ( is_singular() && empty($description) ) {
-    global $post;
-    $description = wp_trim_words( strip_shortcodes($post->post_content), 25, '...' );
+    if ( has_excerpt() ) {
+      $description = get_the_excerpt();
+    } else {
+      global $post;
+      $description = wp_trim_words( strip_shortcodes($post->post_content), 25, '...' );
+    }
   } elseif ( empty($description) ) {
     $description = get_bloginfo('description');
   }

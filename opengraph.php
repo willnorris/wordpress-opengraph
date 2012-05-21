@@ -41,7 +41,7 @@ add_filter('language_attributes', 'opengraph_add_prefix');
 function opengraph_metadata() {
   $metadata = array();
 
-   // defualt properties defined at http://opengraphprotocol.org/
+   // defualt properties defined at http://ogp.me/
   $properties = array(
     // required
     'title', 'type', 'image', 'url',
@@ -172,3 +172,4 @@ function opengraph_meta_tags() {
   }
 }
 add_action('wp_head', 'opengraph_meta_tags');
+

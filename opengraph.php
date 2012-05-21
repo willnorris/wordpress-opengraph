@@ -17,12 +17,25 @@ $opengraph_prefix_set = false;
 
 /**
  * Add Open Graph XML prefix to <html> element.
+ *
+ * @uses apply_filters calls 'opengraph_prefixes' filter on RDFa prefix array
  */
 function opengraph_add_prefix( $output ) {
+  $prefixes = array(
+    'og' => OPENGRAPH_PREFIX_URI
+  );
+  $namespaces = apply_filters('opengraph_prefixes', $prefixes);
+
+  $prefix_str = '';
+  foreach( $prefixes as $k => $v ) {
+    $prefix_str .= $k . ': ' . $v . ' ';
+  }
+  $prefix_str = trim($prefix_str);
+
   if (preg_match('/(prefix\s*=\s*[\"|\'])/i', $output)) {
-    $output = preg_replace('/(prefix\s*=\s*[\"|\'])/i', '${1}og: ' . esc_attr(OPENGRAPH_PREFIX_URI) . ' ', $output);
+    $output = preg_replace('/(prefix\s*=\s*[\"|\'])/i', '${1}' . $prefix_str, $output);
   } else {
-    $output .= ' prefix="og: ' . esc_attr(OPENGRAPH_PREFIX_URI) . '"';
+    $output .= ' prefix="' . $prefix_str . '"';
   }
   return $output;
 }

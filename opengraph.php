@@ -172,10 +172,12 @@ function opengraph_default_description( $description ) {
   if ( empty($description) ) {
     if ( is_singular() ) {
       if ( has_excerpt() ) {
-        $description = get_the_excerpt();
+        $description = strip_tags(get_the_excerpt());
       } else {
         global $post;
-        $description = wp_trim_words( strip_shortcodes($post->post_content), 25, '...' );
+        // fallback to first 50 words of post contet, minus tags and shortcodes
+        $description = strip_tags(strip_shortcodes($post->post_content));
+        $description = wp_trim_words($description, 50, '...' );
       }
     } else {
       $description = get_bloginfo('description');

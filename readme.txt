@@ -3,7 +3,7 @@ Contributors: willnorris
 Tags: social, opengraph, ogp, facebook
 Requires at least: 2.3
 Tested up to: 3.3.2
-Stable tag: 1.3
+Stable tag: 1.4
 License: Apache License, Version 2.0
 License URI: http://www.apache.org/licenses/LICENSE-2.0.html
 

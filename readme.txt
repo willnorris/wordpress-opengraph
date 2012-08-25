@@ -8,23 +8,30 @@ License: Apache License, Version 2.0
 License URI: http://www.apache.org/licenses/LICENSE-2.0.html
 
 
-Add Open Graph metadata to your pages.
+Adds Open Graph metadata to your pages so that they look great when shared on
+sites like Facebook and Google+.
 
 == Description ==
 
-The [Open Graph Protocol][] defines a mechanism for adding additional metadata
-to webpages to identify them as "social objects".  Most notably, this allows
-for these pages to be used with the [Facebook Like Button][].  This plugin
-inserts the Open Graph metadata into WordPress posts and pages, and provides a
-simple extension mechansim for other plugins to override this data, or to
-provide additional Open Graph data.
+The [Open Graph protocol][] enables any web page to become a rich object in a
+social graph.  Most notably, this allows for these pages to be used with
+Facebook's [Like Button][] and [Graph API][] as well as within [Google+][]
+posts.
 
-Note that this plugin does not actually add the Facebook Like Button to your
-pages, or do anything directly with the Open Graph data.  It makes the data
-available so that other services can do interesting things with it.
+The Open Graph plugin inserts the Open Graph metadata into WordPress posts and
+pages, and provides a simple extension mechansim for other plugins and themes
+to override this data, or to provide additional Open Graph data.
+
+This plugin does not directly add social plugins like the Facebook Like Button
+or the Google [+1 Button][] to your pages (though they're pretty simple to
+add).  It makes the data available so that other services can do interesting
+things with it.
 
 [Open Graph Protocol]: http://ogp.me/
-[Facebook Like Button]: http://developers.facebook.com/docs/reference/plugins/like
+[Like Button]: https://developers.facebook.com/docs/reference/plugins/like
+[Graph API]: https://developers.facebook.com/docs/reference/api/
+[Google+]: http://www.google.com/+
+[+1 Button]: https://developers.google.com/+/plugins/+1button/
 
 
 == Frequently Asked Questions ==
@@ -62,6 +69,12 @@ using the `opengraph_prefixes` filter.
 
 
 == Changelog ==
+
+= version 1.4 (Aug 24, 2012) =
+ - better default description
+ - include all images that are attached to a post, so that users can choose
+   which to use when sharing the page.  If the post has a post thumbnail, that
+   is still used as the primary image.
 
 = version 1.3 (May 21, 2012) =
  - add 'opengraph_prefixes' filter for defining additional prefixes

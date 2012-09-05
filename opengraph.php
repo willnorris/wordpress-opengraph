@@ -113,8 +113,8 @@ function opengraph_default_type( $type ) {
  * Default image property, using the post-thumbnail and any attached images.
  */
 function opengraph_default_image( $image ) {
-  if ( empty($image) ) {
-    global $post;
+  global $post;
+  if ( $post && empty($image) ) {
     $image_ids = array();
 
     // list post thumbnail first if this post has one

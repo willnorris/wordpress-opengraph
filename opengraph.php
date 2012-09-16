@@ -173,20 +173,24 @@ function opengraph_default_sitename( $name ) {
 
 
 /**
- * Default description property, using the bloginfo description.
+ * Default description property, using the excerpt or content for posts, or the
+ * bloginfo description.
  */
 function opengraph_default_description( $description ) {
   if ( empty($description) ) {
     if ( is_singular() ) {
-      if ( has_excerpt() ) {
-        $description = strip_tags(get_the_excerpt());
+      $post = get_queried_object();
+      if ( !empty($post->post_excerpt) ) {
+        $description = strip_tags($post->post_excerpt);
+        $description = wp_trim_excerpt($description);
       } else {
-        $post = get_queried_object();
-        if ( isset($post->post_content) ) {
-          // fallback to first 50 words of post contet, minus tags and shortcodes
-          $description = strip_tags(strip_shortcodes($post->post_content));
-          $description = wp_trim_words($description, 50, '...' );
-        }
+        // fallback to first 55 words of post content. This duplicates some of
+        // the logic from wp_trim_excerpt, but can safely be called outside of
+        // the loop.
+        $description = strip_tags(strip_shortcodes($post->post_content));
+        $excerpt_length = apply_filters('excerpt_length', 55);
+        $excerpt_more = apply_filters('excerpt_more', ' ' . '[...]');
+        $description = wp_trim_words($description, $excerpt_length, $excerpt_more);
       }
     } else {
       $description = get_bloginfo('description');

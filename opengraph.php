@@ -12,7 +12,6 @@
 
 
 define('OPENGRAPH_PREFIX_URI', 'http://ogp.me/ns#');
-$opengraph_prefix_set = false;
 
 
 /**
@@ -89,8 +88,10 @@ add_filter('wp', 'opengraph_default_metadata');
  */
 function opengraph_default_title( $title ) {
   if ( is_singular() && empty($title) ) {
-    global $post;
-    $title = $post->post_title;
+    $post = get_queried_object();
+    if ( isset($post->post_title) ) {
+      $title = $post->post_title;
+    }
   }
   return $title;
 }
@@ -113,19 +114,19 @@ function opengraph_default_type( $type ) {
  * Default image property, using the post-thumbnail and any attached images.
  */
 function opengraph_default_image( $image ) {
-  global $post;
-  if ( $post && empty($image) ) {
+  if ( is_singular() && empty($image) ) {
+    $id = get_queried_object_id();
     $image_ids = array();
 
     // list post thumbnail first if this post has one
     if ( function_exists('has_post_thumbnail') ) {
-      if ( is_singular() && has_post_thumbnail($post->ID) ) {
-        $image_ids[] = get_post_thumbnail_id( $post->ID );
+      if ( is_singular() && has_post_thumbnail($id) ) {
+        $image_ids[] = get_post_thumbnail_id($id);
       }
     }
 
     // then list any image attachments
-    $attachments = get_children( array('post_parent' => $post->ID, 'post_status' => 'inherit',
+    $attachments = get_children( array('post_parent' => $id, 'post_status' => 'inherit',
       'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC',
       'orderby' => 'menu_order ID') );
     foreach($attachments as $attachment) {
@@ -174,10 +175,12 @@ function opengraph_default_description( $description ) {
       if ( has_excerpt() ) {
         $description = strip_tags(get_the_excerpt());
       } else {
-        global $post;
-        // fallback to first 50 words of post contet, minus tags and shortcodes
-        $description = strip_tags(strip_shortcodes($post->post_content));
-        $description = wp_trim_words($description, 50, '...' );
+        $post = get_queried_object();
+        if ( isset($post->post_content) ) {
+          // fallback to first 50 words of post contet, minus tags and shortcodes
+          $description = strip_tags(strip_shortcodes($post->post_content));
+          $description = wp_trim_words($description, 50, '...' );
+        }
       }
     } else {
       $description = get_bloginfo('description');

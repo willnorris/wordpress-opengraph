@@ -182,7 +182,6 @@ function opengraph_default_description( $description ) {
       $post = get_queried_object();
       if ( !empty($post->post_excerpt) ) {
         $description = strip_tags($post->post_excerpt);
-        $description = wp_trim_excerpt($description);
       } else {
         // fallback to first 55 words of post content. This duplicates some of
         // the logic from wp_trim_excerpt, but can safely be called outside of

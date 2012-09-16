@@ -11,9 +11,6 @@
  */
 
 
-define('OPENGRAPH_PREFIX_URI', 'http://ogp.me/ns#');
-
-
 /**
  * Add Open Graph XML prefix to <html> element.
  *
@@ -21,7 +18,7 @@ define('OPENGRAPH_PREFIX_URI', 'http://ogp.me/ns#');
  */
 function opengraph_add_prefix( $output ) {
   $prefixes = array(
-    'og' => OPENGRAPH_PREFIX_URI
+    'og' => 'http://ogp.me/ns#'
   );
   $prefixes = apply_filters('opengraph_prefixes', $prefixes);
 
@@ -39,6 +36,17 @@ function opengraph_add_prefix( $output ) {
   return $output;
 }
 add_filter('language_attributes', 'opengraph_add_prefix');
+
+
+/**
+ * Add additional prefix namespaces that are supported by the opengraph plugin.
+ */
+function opengraph_additional_prefixes( $prefixes ) {
+  if ( is_author() ) {
+    $prefixes['profile'] = 'http://ogp.me/ns/profile#';
+  }
+  return $prefixes;
+}
 
 
 /**
@@ -71,6 +79,7 @@ function opengraph_metadata() {
  * Register filters for default Open Graph metadata.
  */
 function opengraph_default_metadata() {
+  // core metadata attributes
   add_filter('opengraph_title', 'opengraph_default_title', 5);
   add_filter('opengraph_type', 'opengraph_default_type', 5);
   add_filter('opengraph_image', 'opengraph_default_image', 5);
@@ -79,6 +88,12 @@ function opengraph_default_metadata() {
   add_filter('opengraph_description', 'opengraph_default_description', 5);
   add_filter('opengraph_locale', 'opengraph_default_locale', 5);
   add_filter('opengraph_site_name', 'opengraph_default_sitename', 5);
+
+  // additional prefixes
+  add_filter('opengraph_prefixes', 'opengraph_additional_prefixes');
+
+  // additional profile metadata
+  add_filter('opengraph_metadata', 'opengraph_profile_metadata');
 }
 add_filter('wp', 'opengraph_default_metadata');
 
@@ -87,10 +102,15 @@ add_filter('wp', 'opengraph_default_metadata');
  * Default title property, using the page title.
  */
 function opengraph_default_title( $title ) {
-  if ( empty($title) && is_singular() ) {
-    $post = get_queried_object();
-    if ( isset($post->post_title) ) {
-      $title = $post->post_title;
+  if ( empty($title) ) {
+    if ( is_singular() ) {
+      $post = get_queried_object();
+      if ( isset($post->post_title) ) {
+        $title = $post->post_title;
+      }
+    } else if ( is_author() ) {
+      $author = get_queried_object();
+      $title = $author->display_name;
     }
   }
   return $title;
@@ -104,6 +124,8 @@ function opengraph_default_type( $type ) {
   if ( empty($type) ) {
     if ( is_singular( array('post', 'page', 'aside', 'status') ) ) {
       $type = 'article';
+    } else if ( is_author() ) {
+      $type = 'profile';
     } else {
       $type = 'blog';
     }
@@ -154,8 +176,12 @@ function opengraph_default_image( $image ) {
  * Default url property, using the permalink for the page.
  */
 function opengraph_default_url( $url ) {
-  if ( empty($url) && is_singular() ) {
-    $url = get_permalink();
+  if ( empty($url) ) {
+    if ( is_singular() ) {
+      $url = get_permalink();
+    } else if ( is_author() ) {
+      $url = get_author_posts_url( get_queried_object_id() );
+    }
   }
   return $url;
 }
@@ -183,14 +209,14 @@ function opengraph_default_description( $description ) {
       if ( !empty($post->post_excerpt) ) {
         $description = strip_tags($post->post_excerpt);
       } else {
-        // fallback to first 55 words of post content. This duplicates some of
-        // the logic from wp_trim_excerpt, but can safely be called outside of
-        // the loop.
+        // fallback to first 55 words of post content.
         $description = strip_tags(strip_shortcodes($post->post_content));
-        $excerpt_length = apply_filters('excerpt_length', 55);
-        $excerpt_more = apply_filters('excerpt_more', ' ' . '[...]');
-        $description = wp_trim_words($description, $excerpt_length, $excerpt_more);
+        $description = __opengraph_trim_text($description);
       }
+    } else if ( is_author() ) {
+      $id = get_queried_object_id();
+      $description = get_user_meta($id, 'description', true);
+      $description = __opengraph_trim_text($description);
     } else {
       $description = get_bloginfo('description');
     }
@@ -227,3 +253,27 @@ function opengraph_meta_tags() {
 }
 add_action('wp_head', 'opengraph_meta_tags');
 
+
+/**
+ * Include profile metadata for author pages.
+ */
+function opengraph_profile_metadata( $metadata ) {
+  if ( is_author() ) {
+    $id = get_queried_object_id();
+    $metadata['profile:first_name'] = get_the_author_meta('first_name', $id);
+    $metadata['profile:last_name'] = get_the_author_meta('last_name', $id);
+    $metadata['profile:username'] = get_the_author_meta('nicename', $id);
+  }
+  return $metadata;
+}
+
+
+/**
+ * Helper function to trim text using the same default values for length and
+ * 'more' text as wp_trim_excerpt.
+ */
+function __opengraph_trim_text( $text ) {
+  $excerpt_length = apply_filters('excerpt_length', 55);
+  $excerpt_more = apply_filters('excerpt_more', ' ' . '[...]');
+  return wp_trim_words($text, $excerpt_length, $excerpt_more);
+}

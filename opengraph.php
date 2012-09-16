@@ -87,7 +87,7 @@ add_filter('wp', 'opengraph_default_metadata');
  * Default title property, using the page title.
  */
 function opengraph_default_title( $title ) {
-  if ( is_singular() && empty($title) ) {
+  if ( empty($title) && is_singular() ) {
     $post = get_queried_object();
     if ( isset($post->post_title) ) {
       $title = $post->post_title;
@@ -101,10 +101,12 @@ function opengraph_default_title( $title ) {
  * Default type property.
  */
 function opengraph_default_type( $type ) {
-  if ( is_singular( array('post', 'page', 'aside', 'status') ) && empty($type) ) {
-    $type = 'article';
-  } elseif ( empty($type) ) {
-    $type = 'blog';
+  if ( empty($type) ) {
+    if ( is_singular( array('post', 'page', 'aside', 'status') ) ) {
+      $type = 'article';
+    } else {
+      $type = 'blog';
+    }
   }
   return $type;
 }
@@ -114,7 +116,7 @@ function opengraph_default_type( $type ) {
  * Default image property, using the post-thumbnail and any attached images.
  */
 function opengraph_default_image( $image ) {
-  if ( is_singular() && empty($image) ) {
+  if ( empty($image) && is_singular() ) {
     $id = get_queried_object_id();
     $image_ids = array();
 
@@ -152,7 +154,9 @@ function opengraph_default_image( $image ) {
  * Default url property, using the permalink for the page.
  */
 function opengraph_default_url( $url ) {
-  if ( is_singular() && empty($url) ) $url = get_permalink();
+  if ( empty($url) && is_singular() ) {
+    $url = get_permalink();
+  }
   return $url;
 }
 
@@ -161,7 +165,9 @@ function opengraph_default_url( $url ) {
  * Default site_name property, using the bloginfo name.
  */
 function opengraph_default_sitename( $name ) {
-  if ( empty($name) ) $name = get_bloginfo('name');
+  if ( empty($name) ) {
+    $name = get_bloginfo('name');
+  }
   return $name;
 }
 
@@ -194,7 +200,9 @@ function opengraph_default_description( $description ) {
  * Default locale property, using the WordPress locale.
  */
 function opengraph_default_locale( $locale ) {
-  if ( empty($locale) ) $locale = get_locale();
+  if ( empty($locale) ) {
+    $locale = get_locale();
+  }
   return $locale;
 }
 
@@ -205,13 +213,12 @@ function opengraph_default_locale( $locale ) {
 function opengraph_meta_tags() {
   $metadata = opengraph_metadata();
   foreach ( $metadata as $key => $value ) {
-    if ( empty($key) || empty($value) ) continue;
-    if ( is_array( $value ) ) {
-      foreach ( $value as $v ) {
-        echo '<meta property="' . esc_attr($key) . '" content="' . esc_attr($v) . '" />' . "\n";
-      }
-    } else {
-      echo '<meta property="' . esc_attr($key) . '" content="' . esc_attr($value) . '" />' . "\n";
+    if ( empty($key) || empty($value) ) {
+      continue;
+    }
+    $value = (array) $value;
+    foreach ( $value as $v ) {
+      echo '<meta property="' . esc_attr($key) . '" content="' . esc_attr($v) . '" />' . "\n";
     }
   }
 }

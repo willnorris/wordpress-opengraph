@@ -217,6 +217,12 @@ function opengraph_default_description( $description ) {
       $id = get_queried_object_id();
       $description = get_user_meta($id, 'description', true);
       $description = __opengraph_trim_text($description);
+    } else if ( is_category() && category_description() ) {
+      $description = category_description();
+      $description = __opengraph_trim_text($description);
+    } else if ( is_tag() && tag_description() ) {
+      $description = tag_description();
+      $description = __opengraph_trim_text($description);
     } else {
       $description = get_bloginfo('description');
     }

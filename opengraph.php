@@ -10,6 +10,10 @@
  Text Domain: opengraph
  */
 
+/**
+ * Disables Jetpacks OpenGraph Support
+ */
+remove_action( 'wp_head', 'jetpack_og_tags' );
 
 /**
  * Add Open Graph XML prefix to <html> element.

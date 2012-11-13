@@ -3,7 +3,7 @@ Contributors: willnorris
 Tags: social, opengraph, ogp, facebook
 Requires at least: 2.3
 Tested up to: 3.5
-Stable tag: 1.5
+Stable tag: 1.5.1
 License: Apache License, Version 2.0
 License URI: http://www.apache.org/licenses/LICENSE-2.0.html
 
@@ -79,6 +79,9 @@ using the `opengraph_prefixes` filter.
 
 Project maintined on github at
 [willnorris/wordpress-opengraph](https://github.com/willnorris/wordpress-opengraph).
+
+= version 1.5.1 (Nov 13, 2012) =
+ - fix duplicate opengraph markup when used with jetpack plugin (for real)
 
 = version 1.5 (Nov 13, 2012) =
  - include descriptions on tag and category pages

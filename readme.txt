@@ -2,14 +2,14 @@
 Contributors: willnorris
 Tags: social, opengraph, ogp, facebook
 Requires at least: 2.3
-Tested up to: 3.3.2
-Stable tag: 1.4
+Tested up to: 3.5
+Stable tag: 1.5
 License: Apache License, Version 2.0
 License URI: http://www.apache.org/licenses/LICENSE-2.0.html
 
 
-Adds Open Graph metadata to your pages so that they look great when shared on
-sites like Facebook and Google+.
+Adds Open Graph metadata to your posts and pages so that they look great when
+shared on sites like Facebook and Google+.
 
 == Description ==
 
@@ -24,8 +24,8 @@ to override this data, or to provide additional Open Graph data.
 
 This plugin does not directly add social plugins like the Facebook Like Button
 or the Google [+1 Button][] to your pages (though they're pretty simple to
-add).  It makes the data available so that other services can do interesting
-things with it.
+add).  It will however make your pages look great when shared using those kinds
+of tools.
 
 [Open Graph Protocol]: http://ogp.me/
 [Like Button]: https://developers.facebook.com/docs/reference/plugins/like
@@ -35,6 +35,13 @@ things with it.
 
 
 == Frequently Asked Questions ==
+
+= How do I configure the Open Graph plugin? =
+
+You don't; there's nothing to configure and there is no admin page.  By
+default, it will use whatever standard WordPress data it can to populate the
+Open Graph data.  There are very simple yet powerful filters you can use to
+modify or extend the metadata returned by the plugin, described below.
 
 = How do I extend the Open Graph plugin? =
 
@@ -69,6 +76,16 @@ using the `opengraph_prefixes` filter.
 
 
 == Changelog ==
+
+Project maintined on github at
+[willnorris/wordpress-opengraph](https://github.com/willnorris/wordpress-opengraph).
+
+= version 1.5 (Nov 13, 2012) =
+ - include descriptions on tag and category pages
+ - include profile metadata on author pages
+ - fix bug with 404 pages include extra og:image values
+ - general code cleanup (including removal of dependency on global vars)
+ - fix duplicate opengraph markup when used with jetpack plugin
 
 = version 1.4 (Aug 24, 2012) =
  - better default description

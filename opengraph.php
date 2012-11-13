@@ -13,7 +13,8 @@
 
 // If you have the opengraph plugin running alongside jetpack, we assume you'd
 // rather use our opengraph support, so disable jetpack's opengraph functionality.
-add_filter('jetpack_enable_opengraph', '__return_false', 99);
+add_filter('jetpack_enable_opengraph', '__return_false');
+add_filter('jetpack_enable_open_graph', '__return_false');
 
 
 /**

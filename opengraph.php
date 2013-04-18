@@ -170,7 +170,7 @@ function opengraph_default_image( $image ) {
     }
     
     // add the "structured post format" image
-    if ( function_exists('get_the_post_format_image') ) {
+    if ( function_exists('get_post_format_meta') ) {
       if ( is_singular() && (get_post_format() == "image") ) {
       	$meta = get_post_format_meta( get_the_ID() );
         

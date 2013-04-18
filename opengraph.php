@@ -151,7 +151,7 @@ function opengraph_default_image( $image ) {
   if ( empty($image) && is_singular() ) {
     $id = get_queried_object_id();
     $image_ids = array();
-
+    
     // list post thumbnail first if this post has one
     if ( function_exists('has_post_thumbnail') ) {
       if ( is_singular() && has_post_thumbnail($id) ) {
@@ -168,6 +168,20 @@ function opengraph_default_image( $image ) {
         $image_ids[] = $attachment->ID;
       }
     }
+    
+    // add the "structured post format" image
+    if ( function_exists('get_the_post_format_image') ) {
+      if ( is_singular() && (get_post_format() == "image") ) {
+      	$meta = get_post_format_meta( get_the_ID() );
+        
+      	if ( ! empty( $meta['image'] ) ) {
+      		$image_ids[] = $meta['image'];
+      	}
+      }
+    }
+    
+    // show the image only once
+    $image_ids = array_unique($image_ids);
 
     // get URLs for each image
     $image = array();

@@ -10,11 +10,6 @@
  Text Domain: opengraph
  */
 
-/**
- * Disables Jetpacks OpenGraph Support
- */
-remove_action( 'wp_head', 'jetpack_og_tags' );
-
 // If you have the opengraph plugin running alongside jetpack, we assume you'd
 // rather use our opengraph support, so disable jetpack's opengraph functionality.
 add_filter('jetpack_enable_opengraph', '__return_false');

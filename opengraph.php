@@ -164,17 +164,6 @@ function opengraph_default_image( $image ) {
       }
     }
     
-    // add the "structured post format" image
-    if ( function_exists('get_post_format_meta') ) {
-      if ( is_singular() && (get_post_format() == "image") ) {
-      	$meta = get_post_format_meta( get_the_ID() );
-        
-      	if ( ! empty( $meta['image'] ) ) {
-      		$image_ids[] = $meta['image'];
-      	}
-      }
-    }
-    
     // show the image only once
     $image_ids = array_unique($image_ids);
 

@@ -10,7 +10,6 @@
  Text Domain: opengraph
  */
 
-
 // If you have the opengraph plugin running alongside jetpack, we assume you'd
 // rather use our opengraph support, so disable jetpack's opengraph functionality.
 add_filter('jetpack_enable_opengraph', '__return_false');
@@ -147,7 +146,7 @@ function opengraph_default_image( $image ) {
   if ( empty($image) && is_singular() ) {
     $id = get_queried_object_id();
     $image_ids = array();
-
+    
     // list post thumbnail first if this post has one
     if ( function_exists('has_post_thumbnail') ) {
       if ( is_singular() && has_post_thumbnail($id) ) {
@@ -164,6 +163,9 @@ function opengraph_default_image( $image ) {
         $image_ids[] = $attachment->ID;
       }
     }
+    
+    // show the image only once
+    $image_ids = array_unique($image_ids);
 
     // get URLs for each image
     $image = array();

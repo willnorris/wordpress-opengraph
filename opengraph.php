@@ -261,7 +261,8 @@ function opengraph_meta_tags() {
     }
     $value = (array) $value;
     foreach ( $value as $v ) {
-      echo '<meta property="' . esc_attr($key) . '" content="' . esc_attr($v) . '" />' . "\n";
+      printf('<meta property="%1$s" name="%1$s" content="%2$s" />' . "\n",
+        esc_attr($key), esc_attr($v));
     }
   }
 }

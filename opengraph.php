@@ -132,7 +132,7 @@ function opengraph_default_type( $type ) {
     } else if ( is_author() ) {
       $type = 'profile';
     } else {
-      $type = 'blog';
+      $type = 'website';
     }
   }
   return $type;

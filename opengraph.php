@@ -312,12 +312,23 @@ function opengraph_profile_metadata( $metadata ) {
  */
 function opengraph_article_metadata( $metadata ) {
   if ( is_singular() ) {
-    $tags = get_the_tags();
+    $post = get_queried_object();
+
+    $tags = wp_get_post_tags($post->ID);
     
-    foreach ( $tags as $tag ) {
-      $metadata['article:tag'][] = $tag->name;
+    // check if page/post has tags
+    if ($tags) {
+      foreach ( $tags as $tag ) {
+        $metadata['article:tag'][] = $tag->name;
+      }
     }
+    
+    $metadata['article:published_time'] = get_the_time( 'c', $post->ID );
+    $metadata['article:author:first_name'] = get_the_author_meta('first_name', $post->post_author);
+    $metadata['article:author:last_name'] = get_the_author_meta('last_name', $post->post_author);
+    $metadata['article:author:username'] = get_the_author_meta('nicename', $post->post_author);
   }
+  
   return $metadata;
 }
 

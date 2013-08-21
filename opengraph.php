@@ -128,7 +128,7 @@ function opengraph_default_title( $title ) {
  */
 function opengraph_default_type( $type ) {
   if ( empty($type) ) {
-    if ( is_singular( array('post', 'page', 'aside', 'status') ) ) {
+    if ( is_singular( array('post', 'page') ) ) {
       $type = 'article';
     } else if ( is_author() ) {
       $type = 'profile';

@@ -51,6 +51,9 @@ function opengraph_additional_prefixes( $prefixes ) {
   if ( is_author() ) {
     $prefixes['profile'] = 'http://ogp.me/ns/profile#';
   }
+  if ( is_singular() ) {
+    $prefixes['article'] = 'http://ogp.me/ns/article#';
+  }
   return $prefixes;
 }
 
@@ -100,6 +103,9 @@ function opengraph_default_metadata() {
 
   // additional profile metadata
   add_filter('opengraph_metadata', 'opengraph_profile_metadata');
+  
+  // additional article metadata
+  add_filter('opengraph_metadata', 'opengraph_article_metadata');
 }
 add_filter('wp', 'opengraph_default_metadata');
 
@@ -285,6 +291,34 @@ function opengraph_profile_metadata( $metadata ) {
     $metadata['profile:last_name'] = get_the_author_meta('last_name', $id);
     $metadata['profile:username'] = get_the_author_meta('nicename', $id);
   }
+  return $metadata;
+}
+
+
+/**
+ * Include profile metadata for author pages.
+ *
+ * @link http://ogp.me/#type_article
+ */
+function opengraph_article_metadata( $metadata ) {
+  if ( is_singular() ) {
+    $post = get_queried_object();
+
+    $tags = wp_get_post_tags($post->ID);
+    
+    // check if page/post has tags
+    if ($tags) {
+      foreach ( $tags as $tag ) {
+        $metadata['article:tag'][] = $tag->name;
+      }
+    }
+    
+    $metadata['article:published_time'] = get_the_time( 'c', $post->ID );
+    $metadata['article:author:first_name'] = get_the_author_meta('first_name', $post->post_author);
+    $metadata['article:author:last_name'] = get_the_author_meta('last_name', $post->post_author);
+    $metadata['article:author:username'] = get_the_author_meta('nicename', $post->post_author);
+  }
+  
   return $metadata;
 }
 

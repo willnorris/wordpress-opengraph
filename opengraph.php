@@ -123,6 +123,12 @@ function opengraph_default_title( $title ) {
     } else if ( is_author() ) {
       $author = get_queried_object();
       $title = $author->display_name;
+    } else if ( is_category() && single_cat_title( '', false ) ) {
+      $title = single_cat_title( '', false );
+    } else if ( is_tag() && single_tag_title( '', false ) ) {
+      $title = single_tag_title( '', false );
+    } else if ( is_archive() && get_post_format()) {
+      $title = get_post_format_string( get_post_format() );
     }
   }
   return $title;

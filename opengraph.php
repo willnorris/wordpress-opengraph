@@ -258,9 +258,17 @@ function opengraph_meta_tags() {
       continue;
     }
     $value = (array) $value;
-    foreach ( $value as $v ) {
-      printf('<meta property="%1$s" name="%1$s" content="%2$s" />' . "\n",
-        esc_attr($key), esc_attr($v));
+    foreach ( $value as $val ) {
+      // check if $v is an array
+      if ( is_array($val) ) {
+        foreach ($val as $v) {
+          printf('<meta property="%1$s" name="%1$s" content="%2$s" />' . "\n",
+            esc_attr($key), esc_attr($v));
+        }
+      } else {
+        printf('<meta property="%1$s" name="%1$s" content="%2$s" />' . "\n",
+          esc_attr($key), esc_attr($val));
+      }
     }
   }
 }

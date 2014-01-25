@@ -80,6 +80,14 @@ function opengraph_metadata() {
     $filter = 'opengraph_' . $property;
     $metadata["og:$property"] = apply_filters($filter, '');
   }
+
+  $twitter_properties = array('card');
+
+  foreach($twitter_properties as $property) {
+    $filter = 'twitter_' . $property;
+    $metadata["twitter:$property"] = apply_filters($filter, '');
+  }
+
   return apply_filters('opengraph_metadata', $metadata);
 }
 
@@ -106,6 +114,9 @@ function opengraph_default_metadata() {
 
   // additional article metadata
   add_filter('opengraph_metadata', 'opengraph_article_metadata');
+
+  // twitter card metadata
+  add_filter('twitter_card', 'twitter_default_card', 5);
 }
 add_filter('wp', 'opengraph_default_metadata');
 
@@ -257,6 +268,15 @@ function opengraph_default_locale( $locale ) {
     $locale = get_locale();
   }
   return $locale;
+}
+
+function twitter_default_card( $card ) {
+  $post_type = opengraph_default_type();
+  if($post_type == 'article') {
+    return "summary";
+  }
+
+  return '';
 }
 
 

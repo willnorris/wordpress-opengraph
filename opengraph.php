@@ -271,7 +271,7 @@ function opengraph_default_locale( $locale ) {
 }
 
 function twitter_default_card( $card ) {
-  $post_type = opengraph_default_type();
+  $post_type = apply_filters('opengraph_type', null);
   if($post_type == 'article') {
     return "summary";
   }

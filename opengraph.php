@@ -171,6 +171,9 @@ function opengraph_default_image( $image ) {
     $id = get_queried_object_id();
     $image_ids = array();
 
+    // As of July 2014, Facebook seems to only let you select from the first 3 images
+    $max_images = apply_filters('opengraph_max_images', 3);
+
     // list post thumbnail first if this post has one
     if ( function_exists('has_post_thumbnail') ) {
       if ( is_singular() && has_post_thumbnail($id) ) {
@@ -185,6 +188,9 @@ function opengraph_default_image( $image ) {
     foreach($attachments as $attachment) {
       if ( !in_array($attachment->ID, $image_ids) ) {
         $image_ids[] = $attachment->ID;
+        if (sizeof($image_ids) >= $max_images) {
+          break;
+        }
       }
     }
 

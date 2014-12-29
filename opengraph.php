@@ -243,26 +243,26 @@ function opengraph_default_description( $description ) {
     if ( is_singular() ) {
       $post = get_queried_object();
       if ( !empty($post->post_excerpt) ) {
-        $description = strip_tags($post->post_excerpt);
+        $description = $post->post_excerpt;
       } else {
-        // fallback to first 55 words of post content.
-        $description = strip_tags(strip_shortcodes($post->post_content));
-        $description = __opengraph_trim_text($description);
+        $description = $post->post_content;
       }
     } else if ( is_author() ) {
       $id = get_queried_object_id();
       $description = get_user_meta($id, 'description', true);
-      $description = __opengraph_trim_text($description);
     } else if ( is_category() && category_description() ) {
       $description = category_description();
-      $description = __opengraph_trim_text($description);
     } else if ( is_tag() && tag_description() ) {
       $description = tag_description();
-      $description = __opengraph_trim_text($description);
     } else {
       $description = get_bloginfo('description');
     }
   }
+
+  // strip description to first 55 words.
+  $description = strip_tags(strip_shortcodes($description));
+  $description = __opengraph_trim_text($description);
+
   return $description;
 }
 

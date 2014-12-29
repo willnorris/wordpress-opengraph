@@ -128,10 +128,7 @@ add_filter('wp', 'opengraph_default_metadata');
 function opengraph_default_title( $title ) {
   if ( empty($title) ) {
     if ( is_singular() ) {
-      $post = get_queried_object();
-      if ( isset($post->post_title) ) {
-        $title = $post->post_title;
-      }
+      $title = get_the_title( get_queried_object_id() );
     } else if ( is_author() ) {
       $author = get_queried_object();
       $title = $author->display_name;

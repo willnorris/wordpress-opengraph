@@ -138,6 +138,8 @@ function opengraph_default_title( $title ) {
       $title = single_tag_title( '', false );
     } else if ( is_archive() && get_post_format()) {
       $title = get_post_format_string( get_post_format() );
+    } else if ( is_archive() && function_exists ("get_the_archive_title") && get_the_archive_title() ) { // new in version 4.1 to get all other archive titles
+      $title = get_the_archive_title();
     }
   }
   return $title;

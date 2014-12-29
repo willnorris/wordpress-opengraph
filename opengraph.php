@@ -29,7 +29,7 @@ function opengraph_add_prefix( $output ) {
   $prefixes = apply_filters('opengraph_prefixes', $prefixes);
 
   $prefix_str = '';
-  foreach( $prefixes as $k => $v ) {
+  foreach ( $prefixes as $k => $v ) {
     $prefix_str .= $k . ': ' . $v . ' ';
   }
   $prefix_str = trim($prefix_str);
@@ -62,6 +62,7 @@ function opengraph_additional_prefixes( $prefixes ) {
  * Get the Open Graph metadata for the current page.
  *
  * @uses apply_filters() Calls 'opengraph_{$name}' for each property name
+ * @uses apply_filters() Calls 'twitter_{$name}' for each property name
  * @uses apply_filters() Calls 'opengraph_metadata' before returning metadata array
  */
 function opengraph_metadata() {
@@ -76,14 +77,14 @@ function opengraph_metadata() {
     'audio', 'description', 'determiner', 'locale', 'site_name', 'video',
   );
 
-  foreach ($properties as $property) {
+  foreach ( $properties as $property ) {
     $filter = 'opengraph_' . $property;
     $metadata["og:$property"] = apply_filters($filter, '');
   }
 
   $twitter_properties = array('card');
 
-  foreach($twitter_properties as $property) {
+  foreach ( $twitter_properties as $property ) {
     $filter = 'twitter_' . $property;
     $metadata["twitter:$property"] = apply_filters($filter, '');
   }
@@ -185,7 +186,7 @@ function opengraph_default_image( $image ) {
     $attachments = get_children( array('post_parent' => $id, 'post_status' => 'inherit',
       'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC',
       'orderby' => 'menu_order ID') );
-    foreach($attachments as $attachment) {
+    foreach ( $attachments as $attachment ) {
       if ( !in_array($attachment->ID, $image_ids) ) {
         $image_ids[] = $attachment->ID;
         if (sizeof($image_ids) >= $max_images) {
@@ -196,7 +197,7 @@ function opengraph_default_image( $image ) {
 
     // get URLs for each image
     $image = array();
-    foreach($image_ids as $id) {
+    foreach ( $image_ids as $id ) {
       $thumbnail = wp_get_attachment_image_src( $id, 'medium');
       if ($thumbnail) {
         $image[] = $thumbnail[0];
@@ -276,9 +277,13 @@ function opengraph_default_locale( $locale ) {
   return $locale;
 }
 
+
+/**
+ * Default twitter-card type.
+ */
 function twitter_default_card( $card ) {
   $post_type = apply_filters('opengraph_type', null);
-  if($post_type == 'article') {
+  if ( $post_type == 'article' ) {
     return "summary";
   }
 
@@ -331,7 +336,7 @@ function opengraph_article_metadata( $metadata ) {
     $tags = wp_get_post_tags($post->ID);
 
     // check if page/post has tags
-    if ($tags) {
+    if ( $tags ) {
       foreach ( $tags as $tag ) {
         $metadata['article:tag'][] = $tag->name;
       }

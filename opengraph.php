@@ -253,6 +253,8 @@ function opengraph_default_description( $description ) {
       $description = category_description();
     } else if ( is_tag() && tag_description() ) {
       $description = tag_description();
+    } else if ( is_archive() && function_exists("get_the_archive_description") && get_the_archive_description() ) { // new in version 4.1 to get all other archive descriptions
+      $description = get_the_archive_description();
     } else {
       $description = get_bloginfo('description');
     }

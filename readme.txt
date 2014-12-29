@@ -1,9 +1,9 @@
 === Open Graph ===
-Contributors: willnorris
+Contributors: willnorris, pfefferle
 Tags: social, opengraph, ogp, facebook
 Requires at least: 2.3
 Tested up to: 3.5
-Stable tag: 1.5.1
+Stable tag: 1.6
 License: Apache License, Version 2.0
 License URI: http://www.apache.org/licenses/LICENSE-2.0.html
 
@@ -80,6 +80,13 @@ using the `opengraph_prefixes` filter.
 Project maintined on github at
 [willnorris/wordpress-opengraph](https://github.com/willnorris/wordpress-opengraph).
 
+= version 1.6 () =
+ - implemented `get_the_archive_title` and `get_the_archive_description` (new in WordPress 4.1)
+ - basic twitter cards support (thanks to elroyjetson)
+ - replace `$post->post_title` with `get_the_title()` (see #[17][] for details)
+
+[17]: https://github.com/willnorris/wordpress-opengraph/issues/17
+
 = version 1.5.1 (Nov 13, 2012) =
  - fix duplicate opengraph markup when used with jetpack plugin (for real)
 
@@ -100,7 +107,7 @@ Project maintined on github at
  - add 'opengraph_prefixes' filter for defining additional prefixes
  - add new basic properties, and remove some old ones.  This is a breaking
    change for anyone that was using the old properties, but they can always be
-   added using the 'opengraph_metadata' filter.  (see [f476552][] for details)
+   added using the 'opengraph_metadata' filter. (see [f476552][] for details)
  - updates to many default values, particularly for individual posts and pages
    (thanks pfefferle)
  - add basic support for array values (see [d987eb7][])
@@ -110,11 +117,10 @@ Project maintined on github at
 
 = version 1.2 (Feb 21, 2012) =
  - switch to newer RDFa prefix syntax rather than XML namespaces (props
-   pfefferle) 
+   pfefferle)
 
 = version 1.1 (Nov 7, 2011) =
  - fix function undefined error when theme doesn't support post thumbnails
 
 = version 1.0 (Apr 24, 2010) =
  - initial public release
-

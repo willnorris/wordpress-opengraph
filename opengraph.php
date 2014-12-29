@@ -1,11 +1,11 @@
 <?php
 /*
  Plugin Name: Open Graph
- Plugin URI: http://wordpress.org/extend/plugins/opengraph
+ Plugin URI: http://wordpress.org/plugins/opengraph
  Description: Adds Open Graph metadata to your pages
  Author: Will Norris
  Author URI: http://willnorris.com/
- Version: 1.6-alpha
+ Version: 1.6
  License: Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.html)
  Text Domain: opengraph
  */

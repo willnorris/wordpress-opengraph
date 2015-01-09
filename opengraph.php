@@ -119,7 +119,7 @@ function opengraph_default_metadata() {
   // twitter card metadata
   add_filter('twitter_card', 'twitter_default_card', 5);
 }
-add_filter('wp', 'opengraph_default_metadata');
+add_action('wp', 'opengraph_default_metadata');
 
 
 /**
@@ -175,10 +175,8 @@ function opengraph_default_image( $image ) {
     $max_images = apply_filters('opengraph_max_images', 3);
 
     // list post thumbnail first if this post has one
-    if ( function_exists('has_post_thumbnail') ) {
-      if ( is_singular() && has_post_thumbnail($id) ) {
+    if ( function_exists('has_post_thumbnail') && has_post_thumbnail($id) ) {
         $image_ids[] = get_post_thumbnail_id($id);
-      }
     }
 
     // then list any image attachments
@@ -315,6 +313,8 @@ add_action('wp_head', 'opengraph_meta_tags');
 
 /**
  * Include profile metadata for author pages.
+ *
+ * @link http://ogp.me/#type_profile
  */
 function opengraph_profile_metadata( $metadata ) {
   if ( is_author() ) {
@@ -328,7 +328,7 @@ function opengraph_profile_metadata( $metadata ) {
 
 
 /**
- * Include profile metadata for author pages.
+ * Include article metadata for posts and pages.
  *
  * @link http://ogp.me/#type_article
  */

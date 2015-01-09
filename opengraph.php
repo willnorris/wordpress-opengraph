@@ -283,12 +283,14 @@ function opengraph_default_locale( $locale ) {
  * Default twitter-card type.
  */
 function twitter_default_card( $card ) {
-  $post_type = apply_filters('opengraph_type', null);
-  if ( $post_type == 'article' ) {
-    return "summary";
+  if ( empty($card) ) {
+    $post_type = apply_filters('opengraph_type', null);
+    if ( $post_type == 'article' ) {
+      $card = "summary";
+    }
   }
 
-  return '';
+  return $card;
 }
 
 

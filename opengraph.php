@@ -359,6 +359,6 @@ function opengraph_article_metadata( $metadata ) {
  */
 function __opengraph_trim_text( $text ) {
   $excerpt_length = apply_filters('excerpt_length', 55);
-  $excerpt_more = apply_filters('excerpt_more', ' ' . '[...]');
+  $excerpt_more = apply_filters('excerpt_more', ' [...]');
   return wp_trim_words($text, $excerpt_length, $excerpt_more);
 }

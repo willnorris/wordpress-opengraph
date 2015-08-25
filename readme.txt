@@ -2,8 +2,8 @@
 Contributors: willnorris, pfefferle
 Tags: social, opengraph, ogp, facebook
 Requires at least: 2.3
-Tested up to: 4.1
-Stable tag: 1.6
+Tested up to: 4.3
+Stable tag: 1.7
 License: Apache License, Version 2.0
 License URI: http://www.apache.org/licenses/LICENSE-2.0.html
 
@@ -79,6 +79,10 @@ using the `opengraph_prefixes` filter.
 
 Project maintined on github at
 [willnorris/wordpress-opengraph](https://github.com/willnorris/wordpress-opengraph).
+
+= version 1.7 (Aug 25, 2015) =
+ - better twitter:card handling
+ - basic twitter:creator support
 
 = version 1.6 (Dec 30, 2014) =
  - implemented `get_the_archive_title` and `get_the_archive_description` (new in WordPress 4.1)

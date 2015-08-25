@@ -282,9 +282,21 @@ function opengraph_default_locale( $locale ) {
  */
 function twitter_default_card( $card ) {
   if ( empty($card) ) {
-    $post_type = apply_filters('opengraph_type', null);
-    if ( $post_type == 'article' ) {
-      $card = "summary";
+    if ( is_singular( array('post', 'page') ) ) {
+      $images = apply_filters('opengraph_image', null);
+
+      // list post thumbnail first if this post has one
+      if ( function_exists('has_post_thumbnail') && has_post_thumbnail(get_queried_object_id()) ) {
+        $card = 'summary_large_image';
+      } elseif( count( $images ) > 1 ) {
+        $card = 'gallery';
+      } else {
+        $card = 'summary';
+      }
+    } else if ( is_attachment() && wp_attachment_is_image() ) {
+      $card = 'photo';
+    } else {
+      $card = 'summary';
     }
   }
 

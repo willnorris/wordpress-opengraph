@@ -311,7 +311,7 @@ function twitter_default_card( $card ) {
 function twitter_default_creator( $creator ) {
   if ( empty($creator) ) {
     if ( is_singular() ) {
-      global $post;
+      $post = get_queried_object();
       $author = $post->post_author;
       if ( $author && get_the_author_meta( 'twitter', $author ) ) {
         $creator = get_the_author_meta( 'twitter', $author );

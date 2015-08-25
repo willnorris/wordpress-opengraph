@@ -82,7 +82,7 @@ function opengraph_metadata() {
     $metadata["og:$property"] = apply_filters($filter, '');
   }
 
-  $twitter_properties = array('card');
+  $twitter_properties = array('card', 'creator');
 
   foreach ( $twitter_properties as $property ) {
     $filter = 'twitter_' . $property;
@@ -118,6 +118,7 @@ function opengraph_default_metadata() {
 
   // twitter card metadata
   add_filter('twitter_card', 'twitter_default_card', 5);
+  add_filter('twitter_creator', 'twitter_default_creator', 5);
 }
 add_action('wp', 'opengraph_default_metadata');
 
@@ -305,6 +306,24 @@ function twitter_default_card( $card ) {
 
 
 /**
+ * Default twitter-card creator.
+ */
+function twitter_default_creator( $creator ) {
+  if ( empty($creator) ) {
+    if ( is_singular() ) {
+      global $post;
+      $author = $post->post_author;
+      if ( $author && get_the_author_meta( 'twitter', $author ) ) {
+        $creator = get_the_author_meta( 'twitter', $author );
+      }
+    }
+  }
+
+  return $creator;
+}
+
+
+/**
  * Output Open Graph <meta> tags in the page header.
  */
 function opengraph_meta_tags() {
@@ -366,6 +385,14 @@ function opengraph_article_metadata( $metadata ) {
   return $metadata;
 }
 
+/**
+ * Add "twitter" as a contact method
+ */
+function opengraph_user_contactmethods( $user_contactmethods ) {
+  $user_contactmethods['twitter'] = __( 'Twitter Username (with leading "@")', 'opengraph' );
+  return $user_contactmethods;
+}
+add_filter('user_contactmethods', 'opengraph_user_contactmethods', 1);
 
 /**
  * Helper function to trim text using the same default values for length and

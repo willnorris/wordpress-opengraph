@@ -168,40 +168,46 @@ function opengraph_default_type( $type ) {
  * Default image property, using the post-thumbnail and any attached images.
  */
 function opengraph_default_image( $image ) {
-  if ( empty($image) && is_singular() ) {
-    $id = get_queried_object_id();
-    $image_ids = array();
+  if ( empty($image) ) {
+    if ( is_singular( array( 'post', 'page' ) ) ) {
+      $id = get_queried_object_id();
+      $image_ids = array();
 
-    // As of July 2014, Facebook seems to only let you select from the first 3 images
-    $max_images = apply_filters('opengraph_max_images', 3);
+      // As of July 2014, Facebook seems to only let you select from the first 3 images
+      $max_images = apply_filters('opengraph_max_images', 3);
 
-    // list post thumbnail first if this post has one
-    if ( function_exists('has_post_thumbnail') && has_post_thumbnail($id) ) {
-        $image_ids[] = get_post_thumbnail_id($id);
-    }
+      // list post thumbnail first if this post has one
+      if ( function_exists('has_post_thumbnail') && has_post_thumbnail($id) ) {
+          $image_ids[] = get_post_thumbnail_id($id);
+      }
 
-    // then list any image attachments
-    $attachments = get_children( array('post_parent' => $id, 'post_status' => 'inherit',
-      'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC',
-      'orderby' => 'menu_order ID') );
-    foreach ( $attachments as $attachment ) {
-      if ( !in_array($attachment->ID, $image_ids) ) {
-        $image_ids[] = $attachment->ID;
-        if (sizeof($image_ids) >= $max_images) {
-          break;
+      // then list any image attachments
+      $attachments = get_children( array('post_parent' => $id, 'post_status' => 'inherit',
+        'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => 'ASC',
+        'orderby' => 'menu_order ID') );
+      foreach ( $attachments as $attachment ) {
+        if ( !in_array($attachment->ID, $image_ids) ) {
+          $image_ids[] = $attachment->ID;
+          if (sizeof($image_ids) >= $max_images) {
+            break;
+          }
         }
       }
-    }
 
-    // get URLs for each image
-    $image = array();
-    foreach ( $image_ids as $id ) {
-      $thumbnail = wp_get_attachment_image_src( $id, 'medium');
-      if ($thumbnail) {
-        $image[] = $thumbnail[0];
+      // get URLs for each image
+      $image = array();
+      foreach ( $image_ids as $id ) {
+        $thumbnail = wp_get_attachment_image_src( $id, 'medium');
+        if ($thumbnail) {
+          $image[] = $thumbnail[0];
+        }
       }
+    } elseif ( is_attachment() && wp_attachment_is_image() ) {
+      $id = get_queried_object_id();
+      $image = array( wp_get_attachment_url( $id ) );
     }
   }
+
   return $image;
 }
 
@@ -283,21 +289,12 @@ function opengraph_default_locale( $locale ) {
  */
 function twitter_default_card( $card ) {
   if ( empty($card) ) {
-    if ( is_singular( array('post', 'page') ) ) {
-      $images = apply_filters('opengraph_image', null);
+    $card = 'summary';
 
-      // list post thumbnail first if this post has one
-      if ( function_exists('has_post_thumbnail') && has_post_thumbnail(get_queried_object_id()) ) {
-        $card = 'summary_large_image';
-      } elseif( count( $images ) > 1 ) {
-        $card = 'gallery';
-      } else {
-        $card = 'summary';
-      }
-    } else if ( is_attachment() && wp_attachment_is_image() ) {
-      $card = 'photo';
-    } else {
-      $card = 'summary';
+    $images = apply_filters('opengraph_image', null);
+
+    if ( is_singular() && count( $images ) >= 1 ) {
+      $card = 'summary_large_image';
     }
   }
 
@@ -385,14 +382,17 @@ function opengraph_article_metadata( $metadata ) {
   return $metadata;
 }
 
+
 /**
  * Add "twitter" as a contact method
  */
 function opengraph_user_contactmethods( $user_contactmethods ) {
   $user_contactmethods['twitter'] = __( 'Twitter Username (with leading "@")', 'opengraph' );
+
   return $user_contactmethods;
 }
 add_filter('user_contactmethods', 'opengraph_user_contactmethods', 1);
+
 
 /**
  * Helper function to trim text using the same default values for length and

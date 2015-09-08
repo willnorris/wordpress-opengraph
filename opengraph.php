@@ -280,6 +280,7 @@ function opengraph_default_locale( $locale ) {
   if ( empty($locale) ) {
     $locale = get_locale();
   }
+
   return $locale;
 }
 
@@ -288,14 +289,16 @@ function opengraph_default_locale( $locale ) {
  * Default twitter-card type.
  */
 function twitter_default_card( $card ) {
-  if ( empty($card) ) {
-    $card = 'summary';
+  if ( $card ) {
+    return $card;
+  }
 
-    $images = apply_filters('opengraph_image', null);
+  $card = 'summary';
 
-    if ( is_singular() && count( $images ) >= 1 ) {
-      $card = 'summary_large_image';
-    }
+  $images = apply_filters('opengraph_image', null);
+
+  if ( is_singular() && count( $images ) >= 1 ) {
+    $card = 'summary_large_image';
   }
 
   return $card;
@@ -306,14 +309,24 @@ function twitter_default_card( $card ) {
  * Default twitter-card creator.
  */
 function twitter_default_creator( $creator ) {
-  if ( empty($creator) ) {
-    if ( is_singular() ) {
-      $post = get_queried_object();
-      $author = $post->post_author;
-      if ( $author && get_the_author_meta( 'twitter', $author ) ) {
-        $creator = get_the_author_meta( 'twitter', $author );
-      }
-    }
+  if ( $creator || ! is_singular() ) {
+    return $creator;
+  }
+
+  $post = get_queried_object();
+  $author = $post->post_author;
+  $twitter = get_the_author_meta( 'twitter', $author );
+
+  if ( ! $twitter ) {
+    return $creator;
+  }
+
+  // check if twitter-account matches "http://twitter.com/username"
+  if ( preg_match('/^http:\/\/twitter\.com\/(#!\/)?(\w+)/i', $twitter, $matches) ) {
+    $creator = '@' . $matches[2];
+  // check if twitter-account matches "(@)username"
+  } elseif (preg_match('/^@?(\w+)$/i', $twitter, $matches)) {
+    $creator = '@' . $matches[1];
   }
 
   return $creator;
@@ -387,7 +400,7 @@ function opengraph_article_metadata( $metadata ) {
  * Add "twitter" as a contact method
  */
 function opengraph_user_contactmethods( $user_contactmethods ) {
-  $user_contactmethods['twitter'] = __( 'Twitter Username (with leading "@")', 'opengraph' );
+  $user_contactmethods['twitter'] = __( 'Twitter', 'opengraph' );
 
   return $user_contactmethods;
 }

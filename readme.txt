@@ -2,8 +2,8 @@
 Contributors: willnorris, pfefferle
 Tags: social, opengraph, ogp, facebook
 Requires at least: 2.3
-Tested up to: 4.3
-Stable tag: 1.7
+Tested up to: 4.3.1
+Stable tag: 1.7.0
 License: Apache License, Version 2.0
 License URI: http://www.apache.org/licenses/LICENSE-2.0.html
 
@@ -74,13 +74,17 @@ whose keys are the qualified Open Graph property names.  For example:
 Note that you may need to define the RDFa prefix for your properties.  Do this
 using the `opengraph_prefixes` filter.
 
+= How to enable "strict mode" =
+
+
 
 == Changelog ==
 
 Project maintined on github at
 [willnorris/wordpress-opengraph](https://github.com/willnorris/wordpress-opengraph).
 
-= version 1.7 (Aug 25, 2015) =
+= version 1.7.0 (Aug 25, 2015) =
+ - added "strict mode" setting
  - better twitter:card handling
  - basic twitter:creator support
 

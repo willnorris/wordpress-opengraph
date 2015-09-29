@@ -74,10 +74,6 @@ whose keys are the qualified Open Graph property names.  For example:
 Note that you may need to define the RDFa prefix for your properties.  Do this
 using the `opengraph_prefixes` filter.
 
-= How to enable "strict mode" =
-
-
-
 == Changelog ==
 
 Project maintined on github at
@@ -87,6 +83,7 @@ Project maintined on github at
  - added "strict mode" setting
  - better twitter:card handling
  - basic twitter:creator support
+ - WordPress coding standards
 
 = version 1.6 (Dec 30, 2014) =
  - implemented `get_the_archive_title` and `get_the_archive_description` (new in WordPress 4.1)

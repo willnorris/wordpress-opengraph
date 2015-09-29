@@ -1,13 +1,14 @@
 <?php
-/*
- Plugin Name: Open Graph
- Plugin URI: http://wordpress.org/plugins/opengraph
- Description: Adds Open Graph metadata to your pages
- Author: Will Norris
- Author URI: http://willnorris.com/
- Version: 1.7
- License: Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.html)
- Text Domain: opengraph
+/**
+ * Plugin Name: Open Graph
+ * Plugin URI: http://wordpress.org/plugins/opengraph
+ * Description: Adds Open Graph metadata to your pages
+ * Author: Will Norris
+ * Author URI: http://willnorris.com/
+ * Version: 1.7.0
+ * License: Apache License, Version 2.0
+ * License URI: http://www.apache.org/licenses/LICENSE-2.0.html
+ * Text Domain: opengraph
  */
 
 
@@ -15,6 +16,11 @@
 // rather use our opengraph support, so disable jetpack's opengraph functionality.
 add_filter('jetpack_enable_opengraph', '__return_false');
 add_filter('jetpack_enable_open_graph', '__return_false');
+
+// Disable strict mode by default.
+if (!defined('OPENGRAPH_STRICT_MODE')) {
+  define('OPENGRAPH_STRICT_MODE', false);
+}
 
 
 /**
@@ -294,7 +300,6 @@ function twitter_default_card( $card ) {
   }
 
   $card = 'summary';
-
   $images = apply_filters('opengraph_image', null);
 
   if ( is_singular() && count( $images ) >= 1 ) {
@@ -343,9 +348,24 @@ function opengraph_meta_tags() {
       continue;
     }
     $value = (array) $value;
+
     foreach ( $value as $v ) {
-      printf('<meta property="%1$s" name="%1$s" content="%2$s" />' . "\n",
-        esc_attr($key), esc_attr($v));
+      // check if "strict mode" is enabled
+      if (OPENGRAPH_STRICT_MODE === false) {
+        // use "property" and "name"
+        printf('<meta property="%1$s" name="%1$s" content="%2$s" />' . PHP_EOL,
+          esc_attr($key), esc_attr($v));
+      } else {
+        // use "name" attribute for Twitter Cards
+        if (stripos($key, 'twitter:') === 0) {
+          printf('<meta name="%1$s" content="%2$s" />' . PHP_EOL,
+            esc_attr($key), esc_attr($v));
+        // use "property" attribute for Open Graph
+        } else {
+          printf('<meta property="%1$s" content="%2$s" />' . PHP_EOL,
+            esc_attr($key), esc_attr($v));
+        }
+      }
     }
   }
 }

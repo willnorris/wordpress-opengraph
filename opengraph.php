@@ -17,6 +17,7 @@
 add_filter( 'jetpack_enable_opengraph', '__return_false' );
 add_filter( 'jetpack_enable_open_graph', '__return_false' );
 
+
 // Disable strict mode by default.
 if ( ! defined( 'OPENGRAPH_STRICT_MODE' ) ) {
 	define( 'OPENGRAPH_STRICT_MODE', false );

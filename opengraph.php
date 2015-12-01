@@ -184,12 +184,12 @@ function opengraph_default_type( $type ) {
  */
 function opengraph_default_image( $image ) {
 	if ( empty( $image ) ) {
+		// As of July 2014, Facebook seems to only let you select from the first 3 images
+		$max_images = apply_filters( 'opengraph_max_images', 3 );
+
 		if ( is_singular( array( 'post', 'page' ) ) ) {
 			$id = get_queried_object_id();
 			$image_ids = array();
-
-			// As of July 2014, Facebook seems to only let you select from the first 3 images
-			$max_images = apply_filters( 'opengraph_max_images', 3 );
 
 			// list post thumbnail first if this post has one
 			if ( function_exists( 'has_post_thumbnail' ) && has_post_thumbnail( $id ) ) {
@@ -228,6 +228,28 @@ function opengraph_default_image( $image ) {
 		} elseif ( is_attachment() && wp_attachment_is_image() ) {
 			$id = get_queried_object_id();
 			$image = array( wp_get_attachment_url( $id ) );
+		} else {
+			$image = array();
+
+			// add site icon
+			if ( function_exists( 'get_site_icon_url' ) && has_site_icon() ) {
+				$image[] = get_site_icon_url( 512 );
+			}
+
+			// add header images
+			if ( function_exists( 'get_uploaded_header_images' ) ) {
+				if ( is_random_header_image() ) {
+					foreach ( get_uploaded_header_images() as $header_image ) {
+						$image[] = $header_image['url'];
+
+						if ( sizeof( $image ) >= $max_images ) {
+							break;
+						}
+					}
+				} else {
+					$image[] = get_header_image();
+				}
+			}
 		}
 	}
 
@@ -440,6 +462,19 @@ function opengraph_user_contactmethods( $user_contactmethods ) {
 	return $user_contactmethods;
 }
 add_filter( 'user_contactmethods', 'opengraph_user_contactmethods', 1 );
+
+
+/**
+ * Add 512x512 icon size
+ *
+ * @param  array $sizes sizes available for the site icon
+ * @return array        updated list of icons
+ */
+function opengraph_site_icon_image_sizes( $sizes ) {
+	$sizes[] = 512;
+	return array_unique( $sizes );
+}
+add_filter( 'site_icon_image_sizes', 'opengraph_site_icon_image_sizes' );
 
 
 /**

@@ -433,6 +433,7 @@ function opengraph_profile_metadata( $metadata ) {
 function opengraph_article_metadata( $metadata ) {
 	if ( is_singular() ) {
 		$post = get_queried_object();
+		$author = $post->post_author;
 
 		$tags = wp_get_post_tags( $post->ID );
 
@@ -444,9 +445,13 @@ function opengraph_article_metadata( $metadata ) {
 		}
 
 		$metadata['article:published_time'] = get_the_time( 'c', $post->ID );
-		$metadata['article:author:first_name'] = get_the_author_meta( 'first_name', $post->post_author );
-		$metadata['article:author:last_name'] = get_the_author_meta( 'last_name', $post->post_author );
-		$metadata['article:author:username'] = get_the_author_meta( 'nicename', $post->post_author );
+		$metadata['article:author'][] = get_author_posts_url( $author );
+
+		$facebook = get_the_author_meta( 'facebook', $author );
+
+		if ( ! empty( $facebook ) ) {
+			$metadata['article:author'][] = $facebook;
+		}
 	}
 
 	return $metadata;
@@ -458,6 +463,7 @@ function opengraph_article_metadata( $metadata ) {
  */
 function opengraph_user_contactmethods( $user_contactmethods ) {
 	$user_contactmethods['twitter'] = __( 'Twitter', 'opengraph' );
+	$user_contactmethods['facebook'] = __( 'Facebook (Profile URL)', 'opengraph' );
 
 	return $user_contactmethods;
 }

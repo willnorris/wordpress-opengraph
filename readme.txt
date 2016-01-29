@@ -90,6 +90,9 @@ mode by adding the following line to your `config.php`
 Project maintained on github at
 [willnorris/wordpress-opengraph](https://github.com/willnorris/wordpress-opengraph).
 
+= version 1.8.0 (Jan 29, 2016) =
+ - fixed `article:author` property
+
 = version 1.7.0 (Jan 18, 2016) =
  - added "strict mode" setting
  - better twitter:card handling

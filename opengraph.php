@@ -453,13 +453,18 @@ function opengraph_article_metadata( $metadata ) {
 	$post = get_queried_object();
 	$author = $post->post_author;
 
-	$tags = wp_get_post_tags( $post->ID );
-
 	// check if page/post has tags
-	if ( $tags ) {
+	$tags = wp_get_object_terms( $post->ID, 'post_tag' );
+	if ( $tags && is_array( $tags ) ) {
 		foreach ( $tags as $tag ) {
 			$metadata['article:tag'][] = $tag->name;
 		}
+	}
+
+	// check if page/post has categories
+	$categories = wp_get_object_terms( $post->ID, 'category' );
+	if ( $categories && is_array( $categories ) ) {
+		$metadata['article:section'][] = current( $categories )->name;
 	}
 
 	$metadata['article:published_time'] = get_the_time( 'c', $post->ID );

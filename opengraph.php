@@ -46,6 +46,7 @@ function opengraph_add_prefix( $output ) {
 	} else {
 		$output .= ' prefix="' . $prefix_str . '"';
 	}
+
 	return $output;
 }
 add_filter( 'language_attributes', 'opengraph_add_prefix' );
@@ -61,6 +62,7 @@ function opengraph_additional_prefixes( $prefixes ) {
 	if ( is_singular() ) {
 		$prefixes['article'] = 'http://ogp.me/ns/article#';
 	}
+
 	return $prefixes;
 }
 
@@ -142,22 +144,25 @@ add_action( 'wp', 'opengraph_default_metadata' );
  * Default title property, using the page title.
  */
 function opengraph_default_title( $title ) {
-	if ( empty( $title ) ) {
-		if ( is_singular() ) {
-			$title = get_the_title( get_queried_object_id() );
-		} else if ( is_author() ) {
-			$author = get_queried_object();
-			$title = $author->display_name;
-		} else if ( is_category() && single_cat_title( '', false ) ) {
-			$title = single_cat_title( '', false );
-		} else if ( is_tag() && single_tag_title( '', false ) ) {
-			$title = single_tag_title( '', false );
-		} else if ( is_archive() && get_post_format() ) {
-			$title = get_post_format_string( get_post_format() );
-		} else if ( is_archive() && function_exists( 'get_the_archive_title' ) && get_the_archive_title() ) { // new in version 4.1 to get all other archive titles
-			$title = get_the_archive_title();
-		}
+	if ( $title ) {
+		return $title;
 	}
+
+	if ( is_singular() ) {
+		$title = get_the_title( get_queried_object_id() );
+	} else if ( is_author() ) {
+		$author = get_queried_object();
+		$title = $author->display_name;
+	} else if ( is_category() && single_cat_title( '', false ) ) {
+		$title = single_cat_title( '', false );
+	} else if ( is_tag() && single_tag_title( '', false ) ) {
+		$title = single_tag_title( '', false );
+	} else if ( is_archive() && get_post_format() ) {
+		$title = get_post_format_string( get_post_format() );
+	} else if ( is_archive() && function_exists( 'get_the_archive_title' ) && get_the_archive_title() ) { // new in version 4.1 to get all other archive titles
+		$title = get_the_archive_title();
+	}
+
 	return $title;
 }
 
@@ -175,6 +180,7 @@ function opengraph_default_type( $type ) {
 			$type = 'website';
 		}
 	}
+
 	return $type;
 }
 
@@ -183,72 +189,74 @@ function opengraph_default_type( $type ) {
  * Default image property, using the post-thumbnail and any attached images.
  */
 function opengraph_default_image( $image ) {
-	if ( empty( $image ) ) {
-		// As of July 2014, Facebook seems to only let you select from the first 3 images
-		$max_images = apply_filters( 'opengraph_max_images', 3 );
+	if ( $image ) {
+		return $image;
+	}
 
-		if ( is_singular( array( 'post', 'page' ) ) ) {
-			$id = get_queried_object_id();
-			$image_ids = array();
+	// As of July 2014, Facebook seems to only let you select from the first 3 images
+	$max_images = apply_filters( 'opengraph_max_images', 3 );
 
-			// list post thumbnail first if this post has one
-			if ( function_exists( 'has_post_thumbnail' ) && has_post_thumbnail( $id ) ) {
-					$image_ids[] = get_post_thumbnail_id( $id );
+	if ( is_singular( array( 'post', 'page' ) ) ) {
+		$id = get_queried_object_id();
+		$image_ids = array();
+
+		// list post thumbnail first if this post has one
+		if ( function_exists( 'has_post_thumbnail' ) && has_post_thumbnail( $id ) ) {
+			$image_ids[] = get_post_thumbnail_id( $id );
+		}
+
+		// then list any image attachments
+		$attachments = get_children(
+			array(
+				'post_parent' => $id,
+				'post_status' => 'inherit',
+				'post_type' => 'attachment',
+				'post_mime_type' => 'image',
+				'order' => 'ASC',
+				'orderby' => 'menu_order ID',
+			)
+		);
+
+		foreach ( $attachments as $attachment ) {
+			if ( ! in_array( $attachment->ID, $image_ids ) ) {
+				$image_ids[] = $attachment->ID;
+				if ( sizeof( $image_ids ) >= $max_images ) {
+					break;
+				}
 			}
+		}
 
-			// then list any image attachments
-			$attachments = get_children(
-				array(
-					'post_parent' => $id,
-					'post_status' => 'inherit',
-					'post_type' => 'attachment',
-					'post_mime_type' => 'image',
-					'order' => 'ASC',
-					'orderby' => 'menu_order ID',
-				)
-			);
+		// get URLs for each image
+		$image = array();
+		foreach ( $image_ids as $id ) {
+			$thumbnail = wp_get_attachment_image_src( $id, 'medium' );
+			if ( $thumbnail ) {
+				$image[] = $thumbnail[0];
+			}
+		}
+	} elseif ( is_attachment() && wp_attachment_is_image() ) {
+		$id = get_queried_object_id();
+		$image = array( wp_get_attachment_url( $id ) );
+	} else {
+		$image = array();
 
-			foreach ( $attachments as $attachment ) {
-				if ( ! in_array( $attachment->ID, $image_ids ) ) {
-					$image_ids[] = $attachment->ID;
-					if ( sizeof( $image_ids ) >= $max_images ) {
+		// add site icon
+		if ( function_exists( 'get_site_icon_url' ) && has_site_icon() ) {
+			$image[] = get_site_icon_url( 512 );
+		}
+
+		// add header images
+		if ( function_exists( 'get_uploaded_header_images' ) ) {
+			if ( is_random_header_image() ) {
+				foreach ( get_uploaded_header_images() as $header_image ) {
+					$image[] = $header_image['url'];
+
+					if ( sizeof( $image ) >= $max_images ) {
 						break;
 					}
 				}
-			}
-
-			// get URLs for each image
-			$image = array();
-			foreach ( $image_ids as $id ) {
-				$thumbnail = wp_get_attachment_image_src( $id, 'medium' );
-				if ( $thumbnail ) {
-					$image[] = $thumbnail[0];
-				}
-			}
-		} elseif ( is_attachment() && wp_attachment_is_image() ) {
-			$id = get_queried_object_id();
-			$image = array( wp_get_attachment_url( $id ) );
-		} else {
-			$image = array();
-
-			// add site icon
-			if ( function_exists( 'get_site_icon_url' ) && has_site_icon() ) {
-				$image[] = get_site_icon_url( 512 );
-			}
-
-			// add header images
-			if ( function_exists( 'get_uploaded_header_images' ) ) {
-				if ( is_random_header_image() ) {
-					foreach ( get_uploaded_header_images() as $header_image ) {
-						$image[] = $header_image['url'];
-
-						if ( sizeof( $image ) >= $max_images ) {
-							break;
-						}
-					}
-				} else {
-					$image[] = get_header_image();
-				}
+			} else {
+				$image[] = get_header_image();
 			}
 		}
 	}
@@ -268,6 +276,7 @@ function opengraph_default_url( $url ) {
 			$url = get_author_posts_url( get_queried_object_id() );
 		}
 	}
+
 	return $url;
 }
 
@@ -279,6 +288,7 @@ function opengraph_default_sitename( $name ) {
 	if ( empty( $name ) ) {
 		$name = get_bloginfo( 'name' );
 	}
+
 	return $name;
 }
 
@@ -288,26 +298,28 @@ function opengraph_default_sitename( $name ) {
  * bloginfo description.
  */
 function opengraph_default_description( $description ) {
-	if ( empty( $description ) ) {
-		if ( is_singular() ) {
-			$post = get_queried_object();
-			if ( ! empty( $post->post_excerpt ) ) {
-				$description = $post->post_excerpt;
-			} else {
-				$description = $post->post_content;
-			}
-		} else if ( is_author() ) {
-			$id = get_queried_object_id();
-			$description = get_user_meta( $id, 'description', true );
-		} else if ( is_category() && category_description() ) {
-			$description = category_description();
-		} else if ( is_tag() && tag_description() ) {
-			$description = tag_description();
-		} else if ( is_archive() && function_exists( 'get_the_archive_description' ) && get_the_archive_description() ) { // new in version 4.1 to get all other archive descriptions
-			$description = get_the_archive_description();
+	if ( $description ) {
+		return $description;
+	}
+
+	if ( is_singular() ) {
+		$post = get_queried_object();
+		if ( ! empty( $post->post_excerpt ) ) {
+			$description = $post->post_excerpt;
 		} else {
-			$description = get_bloginfo( 'description' );
+			$description = $post->post_content;
 		}
+	} else if ( is_author() ) {
+		$id = get_queried_object_id();
+		$description = get_user_meta( $id, 'description', true );
+	} else if ( is_category() && category_description() ) {
+		$description = category_description();
+	} else if ( is_tag() && tag_description() ) {
+		$description = tag_description();
+	} else if ( is_archive() && function_exists( 'get_the_archive_description' ) && get_the_archive_description() ) { // new in version 4.1 to get all other archive descriptions
+		$description = get_the_archive_description();
+	} else {
+		$description = get_bloginfo( 'description' );
 	}
 
 	// strip description to first 55 words.
@@ -421,6 +433,7 @@ function opengraph_profile_metadata( $metadata ) {
 		$metadata['profile:last_name'] = get_the_author_meta( 'last_name', $id );
 		$metadata['profile:username'] = get_the_author_meta( 'nicename', $id );
 	}
+
 	return $metadata;
 }
 
@@ -431,27 +444,29 @@ function opengraph_profile_metadata( $metadata ) {
  * @link http://ogp.me/#type_article
  */
 function opengraph_article_metadata( $metadata ) {
-	if ( is_singular() ) {
-		$post = get_queried_object();
-		$author = $post->post_author;
+	if ( ! is_singular() ) {
+		return $metadata;
+	}
 
-		$tags = wp_get_post_tags( $post->ID );
+	$post = get_queried_object();
+	$author = $post->post_author;
 
-		// check if page/post has tags
-		if ( $tags ) {
-			foreach ( $tags as $tag ) {
-				$metadata['article:tag'][] = $tag->name;
-			}
+	$tags = wp_get_post_tags( $post->ID );
+
+	// check if page/post has tags
+	if ( $tags ) {
+		foreach ( $tags as $tag ) {
+			$metadata['article:tag'][] = $tag->name;
 		}
+	}
 
-		$metadata['article:published_time'] = get_the_time( 'c', $post->ID );
-		$metadata['article:author'][] = get_author_posts_url( $author );
+	$metadata['article:published_time'] = get_the_time( 'c', $post->ID );
+	$metadata['article:author'][] = get_author_posts_url( $author );
 
-		$facebook = get_the_author_meta( 'facebook', $author );
+	$facebook = get_the_author_meta( 'facebook', $author );
 
-		if ( ! empty( $facebook ) ) {
-			$metadata['article:author'][] = $facebook;
-		}
+	if ( ! empty( $facebook ) ) {
+		$metadata['article:author'][] = $facebook;
 	}
 
 	return $metadata;
@@ -478,6 +493,7 @@ add_filter( 'user_contactmethods', 'opengraph_user_contactmethods', 1 );
  */
 function opengraph_site_icon_image_sizes( $sizes ) {
 	$sizes[] = 512;
+
 	return array_unique( $sizes );
 }
 add_filter( 'site_icon_image_sizes', 'opengraph_site_icon_image_sizes' );
@@ -490,5 +506,6 @@ add_filter( 'site_icon_image_sizes', 'opengraph_site_icon_image_sizes' );
 function __opengraph_trim_text( $text ) {
 	$excerpt_length = apply_filters( 'excerpt_length', 55 );
 	$excerpt_more = apply_filters( 'excerpt_more', ' [...]' );
+
 	return wp_trim_words( $text, $excerpt_length, $excerpt_more );
 }

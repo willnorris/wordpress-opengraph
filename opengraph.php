@@ -237,7 +237,9 @@ function opengraph_default_image( $image ) {
 	} elseif ( is_attachment() && wp_attachment_is_image() ) {
 		$id = get_queried_object_id();
 		$image = array( wp_get_attachment_url( $id ) );
-	} else {
+	}
+
+	if ( empty( $image ) ) {
 		$image = array();
 
 		// add site icon

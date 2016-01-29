@@ -468,6 +468,7 @@ function opengraph_article_metadata( $metadata ) {
 	}
 
 	$metadata['article:published_time'] = get_the_time( 'c', $post->ID );
+	$metadata['article:modified_time'] = get_the_modified_time( 'c', $post->ID );
 	$metadata['article:author'][] = get_author_posts_url( $author );
 
 	$facebook = get_the_author_meta( 'facebook', $author );

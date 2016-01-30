@@ -5,7 +5,7 @@
  * Description: Adds Open Graph metadata to your pages
  * Author: Will Norris
  * Author URI: http://willnorris.com/
- * Version: 1.7.0
+ * Version: 1.8.0
  * License: Apache License, Version 2.0
  * License URI: http://www.apache.org/licenses/LICENSE-2.0.html
  * Text Domain: opengraph
@@ -196,7 +196,7 @@ function opengraph_default_image( $image ) {
 	// As of July 2014, Facebook seems to only let you select from the first 3 images
 	$max_images = apply_filters( 'opengraph_max_images', 3 );
 
-	if ( is_singular( array( 'post', 'page' ) ) ) {
+	if ( is_singular() ) {
 		$id = get_queried_object_id();
 		$image_ids = array();
 
@@ -257,7 +257,7 @@ function opengraph_default_image( $image ) {
 						break;
 					}
 				}
-			} else {
+			} elseif ( get_header_image() ) {
 				$image[] = get_header_image();
 			}
 		}

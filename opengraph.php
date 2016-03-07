@@ -229,7 +229,7 @@ function opengraph_default_image( $image ) {
 		// get URLs for each image
 		$image = array();
 		foreach ( $image_ids as $id ) {
-			$thumbnail = wp_get_attachment_image_src( $id, 'medium' );
+			$thumbnail = wp_get_attachment_image_src( $id, 'full' );
 			if ( $thumbnail ) {
 				$image[] = $thumbnail[0];
 			}

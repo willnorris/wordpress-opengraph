@@ -196,6 +196,11 @@ function opengraph_default_image( $image ) {
 	// As of July 2014, Facebook seems to only let you select from the first 3 images
 	$max_images = apply_filters( 'opengraph_max_images', 3 );
 
+	// max images can't be negative or zero
+	if ( $max_images <= 0 ) {
+		$max_images = 1;
+	}
+
 	if ( is_singular() ) {
 		$id = get_queried_object_id();
 		$image_ids = array();
@@ -203,10 +208,11 @@ function opengraph_default_image( $image ) {
 		// list post thumbnail first if this post has one
 		if ( function_exists( 'has_post_thumbnail' ) && has_post_thumbnail( $id ) ) {
 			$image_ids[] = get_post_thumbnail_id( $id );
+			$max_images--;
 		}
 
 		// then list any image attachments
-		$attachments = get_children(
+		$query = new WP_Query(
 			array(
 				'post_parent' => $id,
 				'post_status' => 'inherit',
@@ -214,15 +220,13 @@ function opengraph_default_image( $image ) {
 				'post_mime_type' => 'image',
 				'order' => 'ASC',
 				'orderby' => 'menu_order ID',
+				'posts_per_page' => $max_images,
 			)
 		);
 
-		foreach ( $attachments as $attachment ) {
+		foreach ( $query->get_posts() as $attachment ) {
 			if ( ! in_array( $attachment->ID, $image_ids ) ) {
 				$image_ids[] = $attachment->ID;
-				if ( sizeof( $image_ids ) >= $max_images ) {
-					break;
-				}
 			}
 		}
 

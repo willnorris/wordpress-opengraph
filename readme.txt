@@ -2,7 +2,7 @@
 Contributors: willnorris, pfefferle
 Tags: social, opengraph, ogp, facebook
 Requires at least: 2.3
-Tested up to: 4.6.1
+Tested up to: 4.9.4
 Stable tag: 1.8.1
 License: Apache License, Version 2.0
 License URI: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -13,19 +13,11 @@ shared on sites like Facebook and Google+.
 
 == Description ==
 
-The [Open Graph protocol][] enables any web page to become a rich object in a
-social graph.  Most notably, this allows for these pages to be used with
-Facebook's [Like Button][] and [Graph API][] as well as within [Google+][]
-posts.
+The [Open Graph protocol][] enables any web page to become a rich object in a social graph.  Most notably, this allows for these pages to be used with Facebook's [Like Button][] and [Graph API][] as well as within [Google+][] posts.
 
-The Open Graph plugin inserts the Open Graph metadata into WordPress posts and
-pages, and provides a simple extension mechansim for other plugins and themes
-to override this data, or to provide additional Open Graph data.
+The Open Graph plugin inserts the Open Graph metadata into WordPress posts and pages, and provides a simple extension mechansim for other plugins and themes to override this data, or to provide additional Open Graph data.
 
-This plugin does not directly add social plugins like the Facebook Like Button
-or the Google [+1 Button][] to your pages (though they're pretty simple to
-add).  It will however make your pages look great when shared using those kinds
-of tools.
+This plugin does not directly add social plugins like the Facebook Like Button or the Google [+1 Button][] to your pages (though they're pretty simple to add).  It will however make your pages look great when shared using those kinds of tools.
 
 [Open Graph Protocol]: http://ogp.me/
 [Like Button]: https://developers.facebook.com/docs/reference/plugins/like
@@ -38,19 +30,11 @@ of tools.
 
 = How do I configure the Open Graph plugin? =
 
-You don't; there's nothing to configure and there is no admin page.  By
-default, it will use whatever standard WordPress data it can to populate the
-Open Graph data.  There are very simple yet powerful filters you can use to
-modify or extend the metadata returned by the plugin, described below.
+You don't; there's nothing to configure and there is no admin page.  By default, it will use whatever standard WordPress data it can to populate the Open Graph data.  There are very simple yet powerful filters you can use to modify or extend the metadata returned by the plugin, described below.
 
 = How do I extend the Open Graph plugin? =
 
-There are two main ways to provide Open Graph metadata from your plugin or
-theme.  First, you can implement the filter for a specific property.  These
-filters are of the form `opengraph_{name}` where {name} is the unqualified Open
-Graph property name.  For example, if you have a plugin that defines a custom
-post type named "movie", you could override the Open Graph 'type' property for
-those posts using a function like:
+There are two main ways to provide Open Graph metadata from your plugin or theme.  First, you can implement the filter for a specific property.  These filters are of the form `opengraph_{name}` where {name} is the unqualified Open Graph property name.  For example, if you have a plugin that defines a custom post type named "movie", you could override the Open Graph 'type' property for those posts using a function like:
 
     function my_og_type( $type ) {
         if ( get_post_type() == "movie" ) {
@@ -60,10 +44,7 @@ those posts using a function like:
     }
     add_filter( 'opengraph_type', 'my_og_type' );
 
-This will work for all of the core Open Graph properties.  However, if you want
-to add a custom property, such as 'fb:admin', then you would need to hook into
-the `opengraph_metadata` filter.  This filter is passed an associative array,
-whose keys are the qualified Open Graph property names.  For example:
+This will work for all of the core Open Graph properties.  However, if you want to add a custom property, such as 'fb:admin', then you would need to hook into the `opengraph_metadata` filter.  This filter is passed an associative array, whose keys are the qualified Open Graph property names.  For example:
 
     function my_og_metadata( $metadata ) {
         $metadata['fb:admin'] = '12345,67890';
@@ -71,24 +52,18 @@ whose keys are the qualified Open Graph property names.  For example:
     }
     add_filter( 'opengraph_metadata', 'my_og_metadata' );
 
-Note that you may need to define the RDFa prefix for your properties.  Do this
-using the `opengraph_prefixes` filter.
+Note that you may need to define the RDFa prefix for your properties.  Do this using the `opengraph_prefixes` filter.
 
 = How to enable/disable "strict mode" =
 
-The plugin populates the meta 'name' attribute alongside the 'property' attribute
-by default. Because both, the `og:*` and `twitter:*` names, are actually registered
-at http://wiki.whatwg.org/wiki/MetaExtensions, this stays compliant with the
-HTML5 spec. If you want to use a more strict way anyways, you can enable the scrict
-mode by adding the following line to your `config.php`
+The plugin populates the meta 'name' attribute alongside the 'property' attribute by default. Because both, the `og:*` and `twitter:*` names, are actually registered at http://wiki.whatwg.org/wiki/MetaExtensions, this stays compliant with the HTML5 spec. If you want to use a more strict way anyways, you can enable the scrict mode by adding the following line to your `config.php`
 
     define( 'OPENGRAPH_STRICT_MODE', true );
 
 
 == Changelog ==
 
-Project maintained on github at
-[willnorris/wordpress-opengraph](https://github.com/willnorris/wordpress-opengraph).
+Project maintained on github at [willnorris/wordpress-opengraph](https://github.com/willnorris/wordpress-opengraph).
 
 = version 1.8.1 (Nov 19, 2016) =
  - change `og:image` to use the full size of image (props @torenord)

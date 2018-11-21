@@ -5,7 +5,7 @@
  * Description: Adds Open Graph metadata to your pages
  * Author: Will Norris
  * Author URI: http://willnorris.com/
- * Version: 1.8.1
+ * Version: 1.8.2
  * License: Apache License, Version 2.0
  * License URI: http://www.apache.org/licenses/LICENSE-2.0.html
  * Text Domain: opengraph
@@ -359,7 +359,7 @@ function twitter_default_card( $card ) {
 	$card = 'summary';
 	$images = apply_filters( 'opengraph_image', null );
 
-	if ( is_singular() && count( $images ) >= 1 ) {
+	if ( is_singular() && is_array( $images ) && count( $images ) >= 1 ) {
 		$card = 'summary_large_image';
 	}
 

@@ -2,8 +2,8 @@
 Contributors: willnorris, pfefferle
 Tags: social, opengraph, ogp, facebook
 Requires at least: 2.3
-Tested up to: 4.9.9
-Stable tag: 1.8.2
+Tested up to: 5.0.3
+Stable tag: 1.8.3
 License: Apache License, Version 2.0
 License URI: http://www.apache.org/licenses/LICENSE-2.0.html
 
@@ -64,6 +64,9 @@ The plugin populates the meta 'name' attribute alongside the 'property' attribut
 == Changelog ==
 
 Project maintained on github at [willnorris/wordpress-opengraph](https://github.com/willnorris/wordpress-opengraph).
+
+= version 1.8.3 (Jan 27, 2019) =
+ - added escaping for the missing attributes
 
 = version 1.8.2 (Nov 21, 2018) =
  - fixed PHP warning issue: <https://wordpress.org/support/topic/php-warning-count-parameter-must-be-an-array-or-an-object-that-implements-c/>

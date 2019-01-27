@@ -5,7 +5,7 @@
  * Description: Adds Open Graph metadata to your pages
  * Author: Will Norris
  * Author URI: http://willnorris.com/
- * Version: 1.8.2
+ * Version: 1.8.3
  * License: Apache License, Version 2.0
  * License URI: http://www.apache.org/licenses/LICENSE-2.0.html
  * Text Domain: opengraph
@@ -44,7 +44,7 @@ function opengraph_add_prefix( $output ) {
 	if ( preg_match( '/(prefix\s*=\s*[\"|\'])/i', $output ) ) {
 		$output = preg_replace( '/(prefix\s*=\s*[\"|\'])/i', '${1}' . $prefix_str, $output );
 	} else {
-		$output .= ' prefix="' . $prefix_str . '"';
+		$output .= ' prefix="' . esc_attr( $prefix_str ) . '"';
 	}
 
 	return $output;
@@ -163,7 +163,7 @@ function opengraph_default_title( $title ) {
 		$title = get_the_archive_title();
 	}
 
-	return $title;
+	return esc_attr( $title );
 }
 
 
@@ -181,7 +181,7 @@ function opengraph_default_type( $type ) {
 		}
 	}
 
-	return $type;
+	return esc_attr( $type );
 }
 
 
@@ -283,7 +283,7 @@ function opengraph_default_url( $url ) {
 		}
 	}
 
-	return $url;
+	return esc_url( $url );
 }
 
 
@@ -295,7 +295,7 @@ function opengraph_default_sitename( $name ) {
 		$name = get_bloginfo( 'name' );
 	}
 
-	return $name;
+	return esc_attr( $name );
 }
 
 
@@ -332,7 +332,7 @@ function opengraph_default_description( $description ) {
 	$description = strip_tags( strip_shortcodes( $description ) );
 	$description = __opengraph_trim_text( $description );
 
-	return $description;
+	return esc_attr( $description );
 }
 
 
@@ -363,7 +363,7 @@ function twitter_default_card( $card ) {
 		$card = 'summary_large_image';
 	}
 
-	return $card;
+	return esc_attr( $card );
 }
 
 
@@ -390,7 +390,7 @@ function twitter_default_creator( $creator ) {
 		$creator = '@' . $matches[1];
 	}
 
-	return $creator;
+	return esc_attr( $creator );
 }
 
 

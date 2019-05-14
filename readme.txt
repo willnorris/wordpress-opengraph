@@ -2,14 +2,13 @@
 Contributors: willnorris, pfefferle
 Tags: social, opengraph, ogp, facebook
 Requires at least: 2.3
-Tested up to: 5.0.3
-Stable tag: 1.8.3
+Tested up to: 5.2
+Stable tag: 1.9.0
 License: Apache License, Version 2.0
 License URI: http://www.apache.org/licenses/LICENSE-2.0.html
 
 
-Adds Open Graph metadata to your posts and pages so that they look great when
-shared on sites like Facebook and Google+.
+Adds Open Graph metadata to your posts and pages so that they look great when shared on sites like Facebook and Google+.
 
 == Description ==
 
@@ -64,6 +63,13 @@ The plugin populates the meta 'name' attribute alongside the 'property' attribut
 == Changelog ==
 
 Project maintained on github at [willnorris/wordpress-opengraph](https://github.com/willnorris/wordpress-opengraph).
+
+= version 1.9.0 (Mai 14, 2019) =
+ - show only featured image if available
+ - prefer header images over site-icon
+ - use avatar for profile pages
+ - fallback to description if title is empty
+ - better twitter `card` handling
 
 = version 1.8.3 (Jan 27, 2019) =
  - added escaping for the missing attributes

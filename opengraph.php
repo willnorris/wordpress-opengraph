@@ -96,6 +96,7 @@ function opengraph_metadata() {
 
 	foreach ( $properties as $property ) {
 		$filter = 'opengraph_' . $property;
+
 		$metadata[ "og:$property" ] = apply_filters( $filter, '' );
 	}
 
@@ -103,6 +104,7 @@ function opengraph_metadata() {
 
 	foreach ( $twitter_properties as $property ) {
 		$filter = 'twitter_' . $property;
+
 		$metadata[ "twitter:$property" ] = apply_filters( $filter, '' );
 	}
 
@@ -161,7 +163,7 @@ function opengraph_default_title( $title ) {
 		}
 	} elseif ( is_author() ) {
 		$author = get_queried_object();
-		$title = $author->display_name;
+		$title  = $author->display_name;
 	} elseif ( is_category() && single_cat_title( '', false ) ) {
 		$title = single_cat_title( '', false );
 	} elseif ( is_tag() && single_tag_title( '', false ) ) {
@@ -216,7 +218,7 @@ function opengraph_default_image( $image ) {
 	}
 
 	if ( is_singular() ) {
-		$id = get_queried_object_id();
+		$id        = get_queried_object_id();
 		$image_ids = array();
 
 		// list post thumbnail first if this post has one
@@ -226,18 +228,18 @@ function opengraph_default_image( $image ) {
 			// otherwise list any image attachments
 			$query = new WP_Query(
 				array(
-					'post_parent' => $id,
-					'post_status' => 'inherit',
-					'post_type' => 'attachment',
+					'post_parent'    => $id,
+					'post_status'    => 'inherit',
+					'post_type'      => 'attachment',
 					'post_mime_type' => 'image',
-					'order' => 'ASC',
-					'orderby' => 'menu_order ID',
+					'order'          => 'ASC',
+					'orderby'        => 'menu_order ID',
 					'posts_per_page' => $max_images,
 				)
 			);
 
 			foreach ( $query->get_posts() as $attachment ) {
-				if ( ! in_array( $attachment->ID, $image_ids ) ) {
+				if ( ! in_array( $attachment->ID, $image_ids, true ) ) {
 					$image_ids[] = $attachment->ID;
 				}
 			}
@@ -252,7 +254,7 @@ function opengraph_default_image( $image ) {
 			}
 		}
 	} elseif ( is_attachment() && wp_attachment_is_image() ) {
-		$id = get_queried_object_id();
+		$id    = get_queried_object_id();
 		$image = array( wp_get_attachment_url( $id ) );
 	}
 
@@ -329,7 +331,7 @@ function opengraph_default_description( $description, $length = 55 ) {
 			$description = $post->post_content;
 		}
 	} elseif ( is_author() ) {
-		$id = get_queried_object_id();
+		$id          = get_queried_object_id();
 		$description = get_user_meta( $id, 'description', true );
 	} elseif ( is_category() && category_description() ) {
 		$description = category_description();
@@ -369,14 +371,14 @@ function twitter_default_card( $card ) {
 		return $card;
 	}
 
-	$card = 'summary';
+	$card   = 'summary';
 	$images = opengraph_default_image( null );
 
 	// show large image on...
 	if ( is_singular() ) {
 		if (
 			// gallery and image posts
-			in_array( get_post_format(), array( 'image', 'gallery' ) ) ||
+			in_array( get_post_format(), array( 'image', 'gallery' ), true ) ||
 			// posts with more than one image
 			( is_array( $images ) && count( $images ) > 1 ) ||
 			// posts with a post-thumbnail
@@ -398,8 +400,8 @@ function twitter_default_creator( $creator ) {
 		return $creator;
 	}
 
-	$post = get_queried_object();
-	$author = $post->post_author;
+	$post    = get_queried_object();
+	$author  = $post->post_author;
 	$twitter = get_the_author_meta( 'twitter', $author );
 
 	if ( ! $twitter ) {
@@ -432,16 +434,25 @@ function opengraph_meta_tags() {
 			// check if "strict mode" is enabled
 			if ( OPENGRAPH_STRICT_MODE === false ) {
 				// use "property" and "name"
-				printf('<meta property="%1$s" name="%1$s" content="%2$s" />' . PHP_EOL,
-				esc_attr( $key ), esc_attr( $v ) );
+				printf(
+					'<meta property="%1$s" name="%1$s" content="%2$s" />' . PHP_EOL,
+					esc_attr( $key ),
+					esc_attr( $v )
+				);
 			} else {
 				// use "name" attribute for Twitter Cards
 				if ( stripos( $key, 'twitter:' ) === 0 ) {
-					printf( '<meta name="%1$s" content="%2$s" />' . PHP_EOL,
-					esc_attr( $key ), esc_attr( $v ) );
+					printf(
+						'<meta name="%1$s" content="%2$s" />' . PHP_EOL,
+						esc_attr( $key ),
+						esc_attr( $v )
+					);
 				} else { // use "property" attribute for Open Graph
-					printf( '<meta property="%1$s" content="%2$s" />' . PHP_EOL,
-					esc_attr( $key ), esc_attr( $v ) );
+					printf(
+						'<meta property="%1$s" content="%2$s" />' . PHP_EOL,
+						esc_attr( $key ),
+						esc_attr( $v )
+					);
 				}
 			}
 		}
@@ -458,9 +469,10 @@ add_action( 'wp_head', 'opengraph_meta_tags' );
 function opengraph_profile_metadata( $metadata ) {
 	if ( is_author() ) {
 		$id = get_queried_object_id();
+
 		$metadata['profile:first_name'] = get_the_author_meta( 'first_name', $id );
-		$metadata['profile:last_name'] = get_the_author_meta( 'last_name', $id );
-		$metadata['profile:username'] = get_the_author_meta( 'nicename', $id );
+		$metadata['profile:last_name']  = get_the_author_meta( 'last_name', $id );
+		$metadata['profile:username']   = get_the_author_meta( 'nicename', $id );
 	}
 
 	return $metadata;
@@ -477,7 +489,7 @@ function opengraph_article_metadata( $metadata ) {
 		return $metadata;
 	}
 
-	$post = get_queried_object();
+	$post   = get_queried_object();
 	$author = $post->post_author;
 
 	// check if page/post has tags
@@ -495,8 +507,8 @@ function opengraph_article_metadata( $metadata ) {
 	}
 
 	$metadata['article:published_time'] = get_the_time( 'c', $post->ID );
-	$metadata['article:modified_time'] = get_the_modified_time( 'c', $post->ID );
-	$metadata['article:author'][] = get_author_posts_url( $author );
+	$metadata['article:modified_time']  = get_the_modified_time( 'c', $post->ID );
+	$metadata['article:author'][]       = get_author_posts_url( $author );
 
 	$facebook = get_the_author_meta( 'facebook', $author );
 
@@ -512,7 +524,7 @@ function opengraph_article_metadata( $metadata ) {
  * Add "twitter" as a contact method
  */
 function opengraph_user_contactmethods( $user_contactmethods ) {
-	$user_contactmethods['twitter'] = __( 'Twitter', 'opengraph' );
+	$user_contactmethods['twitter']  = __( 'Twitter', 'opengraph' );
 	$user_contactmethods['facebook'] = __( 'Facebook (Profile URL)', 'opengraph' );
 
 	return $user_contactmethods;
@@ -540,7 +552,7 @@ add_filter( 'site_icon_image_sizes', 'opengraph_site_icon_image_sizes' );
  */
 function __opengraph_trim_text( $text, $length = 55 ) {
 	$excerpt_length = apply_filters( 'excerpt_length', $length );
-	$excerpt_more = apply_filters( 'excerpt_more', ' [...]' );
+	$excerpt_more   = apply_filters( 'excerpt_more', ' [...]' );
 
 	return wp_trim_words( $text, $excerpt_length, $excerpt_more );
 }

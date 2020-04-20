@@ -125,6 +125,8 @@ function opengraph_default_metadata() {
 	add_filter( 'opengraph_description', 'opengraph_default_description', 5 );
 	add_filter( 'opengraph_locale', 'opengraph_default_locale', 5 );
 	add_filter( 'opengraph_site_name', 'opengraph_default_sitename', 5 );
+	add_filter( 'opengraph_audio', 'opengraph_default_audio', 5 );
+	add_filter( 'opengraph_video', 'opengraph_default_video', 5 );
 
 	// additional prefixes
 	add_filter( 'opengraph_prefixes', 'opengraph_additional_prefixes' );
@@ -283,6 +285,52 @@ function opengraph_default_image( $image ) {
 	}
 
 	return $image;
+}
+
+
+/**
+ * Default audio property, using get_attached_media.
+ */
+function opengraph_default_audio( $audio ) {
+	$id          = get_queried_object_id();
+	$attachments = get_attached_media( 'audio', $id );
+
+	if ( empty( $attachments ) ) {
+		return $audio;
+	}
+
+	if ( empty( $audio ) ) {
+		$audio = array();
+	}
+
+	foreach ( $attachments as $attachment ) {
+		$audio[] = wp_get_attachment_url( $attachment->ID );
+	}
+
+	return $audio;
+}
+
+
+/**
+ * Default video property, using get_attached_media.
+ */
+function opengraph_default_video( $video ) {
+	$id          = get_queried_object_id();
+	$attachments = get_attached_media( 'video', $id );
+
+	if ( empty( $attachments ) ) {
+		return $video;
+	}
+
+	if ( empty( $video ) ) {
+		$video = array();
+	}
+
+	foreach ( $attachments as $attachment ) {
+		$video[] = wp_get_attachment_url( $attachment->ID );
+	}
+
+	return $video;
 }
 
 

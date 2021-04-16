@@ -14,7 +14,7 @@ Adds Open Graph metadata to your posts and pages so that they look great when sh
 
 The [Open Graph protocol][] enables any web page to become a rich object in a social graph.  Most notably, this allows for these pages to be used with Facebook's [Like Button][] and [Graph API][] as well as within [Google+][] posts.
 
-The Open Graph plugin inserts the Open Graph metadata into WordPress posts and pages, and provides a simple extension mechansim for other plugins and themes to override this data, or to provide additional Open Graph data.
+The Open Graph plugin inserts the Open Graph metadata into WordPress posts and pages, and provides a simple extension mechanism for other plugins and themes to override this data, or to provide additional Open Graph data.
 
 This plugin does not directly add social plugins like the Facebook Like Button or the Google [+1 Button][] to your pages (though they're pretty simple to add).  It will however make your pages look great when shared using those kinds of tools.
 

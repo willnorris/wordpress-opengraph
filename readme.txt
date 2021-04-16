@@ -8,21 +8,19 @@ License: Apache License, Version 2.0
 License URI: http://www.apache.org/licenses/LICENSE-2.0.html
 
 
-Adds Open Graph metadata to your posts and pages so that they look great when shared on sites like Facebook and Google+.
+Adds Open Graph metadata to your posts and pages so that they look great when shared on sites like Facebook and Twitter.
 
 == Description ==
 
-The [Open Graph protocol][] enables any web page to become a rich object in a social graph.  Most notably, this allows for these pages to be used with Facebook's [Like Button][] and [Graph API][] as well as within [Google+][] posts.
+The [Open Graph protocol][] enables any web page to become a rich object in a social graph.  Most notably, this allows for these pages to be used with Facebook's [Like Button][] and [Graph API][] as well as within Twitter posts.
 
 The Open Graph plugin inserts the Open Graph metadata into WordPress posts and pages, and provides a simple extension mechanism for other plugins and themes to override this data, or to provide additional Open Graph data.
 
-This plugin does not directly add social plugins like the Facebook Like Button or the Google [+1 Button][] to your pages (though they're pretty simple to add).  It will however make your pages look great when shared using those kinds of tools.
+This plugin does not directly add social plugins like the Facebook Like Button to your pages (though they're pretty simple to add).  It will however make your pages look great when shared using those kinds of tools.
 
 [Open Graph Protocol]: http://ogp.me/
 [Like Button]: https://developers.facebook.com/docs/reference/plugins/like
 [Graph API]: https://developers.facebook.com/docs/reference/api/
-[Google+]: http://www.google.com/+
-[+1 Button]: https://developers.google.com/+/plugins/+1button/
 
 
 == Frequently Asked Questions ==

@@ -62,7 +62,7 @@ The plugin populates the meta 'name' attribute alongside the 'property' attribut
 
 Project maintained on github at [willnorris/wordpress-opengraph](https://github.com/willnorris/wordpress-opengraph).
 
-= version 1.11.0 (2021)
+= version 1.11.0 (October 21, 2021) =
  - fixed attachment issue
  - fixed PHP 7.4 issue
 

@@ -219,7 +219,7 @@ function opengraph_default_image( $image ) {
 		$max_images = 1;
 	}
 
-	if ( is_singular() ) {
+	if ( is_singular() && ! is_attachment() ) {
 		$id        = get_queried_object_id();
 		$image_ids = array();
 

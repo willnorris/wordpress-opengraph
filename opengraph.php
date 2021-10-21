@@ -393,7 +393,7 @@ function opengraph_default_description( $description, $length = 55 ) {
 
 	// strip description to first 55 words.
 	$description = strip_tags( strip_shortcodes( $description ) );
-	$description = __opengraph_trim_text( $description, $length );
+	$description = opengraph_trim_text( $description, $length );
 
 	return esc_attr( $description );
 }
@@ -598,7 +598,7 @@ add_filter( 'site_icon_image_sizes', 'opengraph_site_icon_image_sizes' );
  * Helper function to trim text using the same default values for length and
  * 'more' text as wp_trim_excerpt.
  */
-function __opengraph_trim_text( $text, $length = 55 ) {
+function opengraph_trim_text( $text, $length = 55 ) {
 	$excerpt_length = apply_filters( 'excerpt_length', $length );
 	$excerpt_more   = apply_filters( 'excerpt_more', ' [...]' );
 

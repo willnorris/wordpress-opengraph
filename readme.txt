@@ -5,7 +5,7 @@ Requires at least: 2.3
 Tested up to: 5.8
 Stable tag: 1.11.0
 License: Apache License, Version 2.0
-License URI: http://www.apache.org/licenses/LICENSE-2.0.html
+License URI: https://www.apache.org/licenses/LICENSE-2.0.html
 
 
 Adds Open Graph metadata to your posts and pages so that they look great when shared on sites like Facebook and Twitter.
@@ -18,7 +18,7 @@ The Open Graph plugin inserts the Open Graph metadata into WordPress posts and p
 
 This plugin does not directly add social plugins like the Facebook Like Button to your pages (though they're pretty simple to add).  It will however make your pages look great when shared using those kinds of tools.
 
-[Open Graph Protocol]: http://ogp.me/
+[Open Graph Protocol]: https://ogp.me/
 [Like Button]: https://developers.facebook.com/docs/reference/plugins/like
 [Graph API]: https://developers.facebook.com/docs/reference/api/
 
@@ -53,7 +53,7 @@ Note that you may need to define the RDFa prefix for your properties.  Do this u
 
 = How to enable/disable "strict mode" =
 
-The plugin populates the meta 'name' attribute alongside the 'property' attribute by default. Because both, the `og:*` and `twitter:*` names, are actually registered at http://wiki.whatwg.org/wiki/MetaExtensions, this stays compliant with the HTML5 spec. If you want to use a more strict way anyways, you can enable the scrict mode by adding the following line to your `config.php`
+The plugin populates the meta 'name' attribute alongside the 'property' attribute by default. Because both, the `og:*` and `twitter:*` names, are actually registered at https://wiki.whatwg.org/wiki/MetaExtensions, this stays compliant with the HTML5 spec. If you want to use a more strict way anyways, you can enable the scrict mode by adding the following line to your `config.php`
 
     define( 'OPENGRAPH_STRICT_MODE', true );
 

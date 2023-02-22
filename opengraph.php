@@ -77,7 +77,7 @@ function opengraph_additional_prefixes( $prefixes ) {
 function opengraph_metadata() {
 	$metadata = array();
 
-	// defualt properties defined at http://ogp.me/
+	// default properties defined at http://ogp.me/
 	$properties = array(
 		// required
 		'title',

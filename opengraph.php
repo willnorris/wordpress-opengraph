@@ -5,7 +5,7 @@
  * Description: Adds Open Graph metadata to your pages
  * Author: Will Norris
  * Author URI: https://willnorris.com/
- * Version: 1.11.0
+ * Version: 1.11.1
  * License: Apache License, Version 2.0
  * License URI: http://www.apache.org/licenses/LICENSE-2.0.html
  * Text Domain: opengraph

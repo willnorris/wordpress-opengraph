@@ -176,7 +176,7 @@ function opengraph_default_title( $title ) {
 		$title = get_the_archive_title();
 	}
 
-	return esc_attr( $title );
+	return wp_strip_all_tags( $title );
 }
 
 
@@ -194,7 +194,7 @@ function opengraph_default_type( $type ) {
 		}
 	}
 
-	return esc_attr( $type );
+	return $type;
 }
 
 
@@ -358,7 +358,7 @@ function opengraph_default_sitename( $name ) {
 		$name = get_bloginfo( 'name' );
 	}
 
-	return esc_attr( $name );
+	return wp_strip_all_tags( $name );
 }
 
 
@@ -395,7 +395,7 @@ function opengraph_default_description( $description, $length = 55 ) {
 	$description = strip_tags( strip_shortcodes( $description ) );
 	$description = opengraph_trim_text( $description, $length );
 
-	return esc_attr( $description );
+	return wp_strip_all_tags( $description );
 }
 
 
@@ -436,7 +436,7 @@ function twitter_default_card( $card ) {
 		}
 	}
 
-	return esc_attr( $card );
+	return $card;
 }
 
 
@@ -463,7 +463,7 @@ function twitter_default_creator( $creator ) {
 		$creator = '@' . $matches[1];
 	}
 
-	return esc_attr( $creator );
+	return $creator;
 }
 
 

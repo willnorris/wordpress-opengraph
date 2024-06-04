@@ -373,7 +373,9 @@ function opengraph_default_description( $description, $length = 55 ) {
 
 	if ( is_singular() ) {
 		$post = get_queried_object();
-		if ( ! empty( $post->post_excerpt ) ) {
+		if ( post_password_required( $post ) ) {
+			$description = __( 'This content is password protected.' );
+		} else if ( ! empty( $post->post_excerpt ) ) {
 			$description = $post->post_excerpt;
 		} else {
 			$description = $post->post_content;

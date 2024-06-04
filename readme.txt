@@ -3,7 +3,7 @@ Contributors: willnorris, pfefferle
 Tags: social, opengraph, ogp, facebook
 Requires at least: 2.3
 Tested up to: 6.5
-Stable tag: 1.11.2
+Stable tag: 1.11.3
 License: Apache License, Version 2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0.html
 
@@ -61,6 +61,9 @@ The plugin populates the meta 'name' attribute alongside the 'property' attribut
 == Changelog ==
 
 Project maintained on github at [willnorris/wordpress-opengraph](https://github.com/willnorris/wordpress-opengraph).
+
+= version 1.11.3 (Jun 4, 2024) =
+ - don't return description for password protected posts
 
 = version 1.11.2 (Nov 13, 2023) =
  - stript tags from title, site-name and description

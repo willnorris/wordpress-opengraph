@@ -140,6 +140,9 @@ function opengraph_default_metadata() {
 	// twitter card metadata
 	add_filter( 'twitter_card', 'twitter_default_card', 5 );
 	add_filter( 'twitter_creator', 'twitter_default_creator', 5 );
+
+	// fediverse creator metadata
+	add_filter( 'opengraph_metadata', 'openpraph_fediverse_metadata' );
 }
 add_action( 'wp', 'opengraph_default_metadata' );
 
@@ -468,7 +471,6 @@ function twitter_default_creator( $creator ) {
 	return $creator;
 }
 
-
 /**
  * Output Open Graph <meta> tags in the page header.
  */
@@ -569,6 +571,32 @@ function opengraph_article_metadata( $metadata ) {
 	return $metadata;
 }
 
+/**
+ * Add Fediverse support
+ *
+ * @see https://github.com/mastodon/mastodon/pull/30398
+ */
+function openpraph_fediverse_metadata( $metadata ) {
+	if ( ! is_singular() ) {
+		return $metadata;
+	}
+
+	$post      = get_queried_object();
+	$author    = $post->post_author;
+	$webfinger = get_the_author_meta( 'fediverse', $author );
+
+	if ( ! $webfinger ) {
+		return $metadata;
+	}
+
+	$webfinger = ltrim( $webfinger, '@' );
+	$webfinger = ltrim( $webfinger, 'acct:' );
+
+	$metadata['fediverse:creator'] = $webfinger;
+
+	return $metadata;
+}
+
 
 /**
  * Add "twitter" as a contact method
@@ -576,6 +604,7 @@ function opengraph_article_metadata( $metadata ) {
 function opengraph_user_contactmethods( $user_contactmethods ) {
 	$user_contactmethods['twitter']  = __( 'Twitter', 'opengraph' );
 	$user_contactmethods['facebook'] = __( 'Facebook (Profile URL)', 'opengraph' );
+	$user_contactmethods['fediverse'] = __( 'Fediverse (username@host.tld)', 'opengraph' );
 
 	return $user_contactmethods;
 }

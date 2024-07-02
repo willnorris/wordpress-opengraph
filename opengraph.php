@@ -108,6 +108,14 @@ function opengraph_metadata() {
 		$metadata[ "twitter:$property" ] = apply_filters( $filter, '' );
 	}
 
+	$fediverse_properties = array( 'creator' );
+
+	foreach ( $fediverse_properties as $property ) {
+		$filter = 'fediverse_' . $property;
+
+		$metadata[ "fediverse:$property" ] = apply_filters( $filter, '' );
+	}
+
 	return apply_filters( 'opengraph_metadata', $metadata );
 }
 
@@ -142,7 +150,7 @@ function opengraph_default_metadata() {
 	add_filter( 'twitter_creator', 'twitter_default_creator', 5 );
 
 	// fediverse creator metadata
-	add_filter( 'opengraph_metadata', 'openpraph_fediverse_metadata' );
+	add_filter( 'fediverse_creator', 'fediverse_default_creator' );
 }
 add_action( 'wp', 'opengraph_default_metadata' );
 
@@ -471,6 +479,34 @@ function twitter_default_creator( $creator ) {
 	return $creator;
 }
 
+
+/**
+ * Add Fediverse support
+ *
+ * @see https://github.com/mastodon/mastodon/pull/30398
+ */
+function fediverse_default_creator( $metadata ) {
+	if ( ! is_singular() ) {
+		return $metadata;
+	}
+
+	$post      = get_queried_object();
+	$author    = $post->post_author;
+	$webfinger = get_the_author_meta( 'fediverse', $author );
+
+	if ( ! $webfinger ) {
+		return $metadata;
+	}
+
+	$webfinger = ltrim( $webfinger, '@' );
+	$webfinger = ltrim( $webfinger, 'acct:' );
+
+	$metadata['fediverse:creator'] = $webfinger;
+
+	return $metadata;
+}
+
+
 /**
  * Output Open Graph <meta> tags in the page header.
  */
@@ -569,32 +605,6 @@ function opengraph_article_metadata( $metadata ) {
 	if ( ! empty( $facebook ) ) {
 		$metadata['article:author'][] = $facebook;
 	}
-
-	return $metadata;
-}
-
-/**
- * Add Fediverse support
- *
- * @see https://github.com/mastodon/mastodon/pull/30398
- */
-function openpraph_fediverse_metadata( $metadata ) {
-	if ( ! is_singular() ) {
-		return $metadata;
-	}
-
-	$post      = get_queried_object();
-	$author    = $post->post_author;
-	$webfinger = get_the_author_meta( 'fediverse', $author );
-
-	if ( ! $webfinger ) {
-		return $metadata;
-	}
-
-	$webfinger = ltrim( $webfinger, '@' );
-	$webfinger = ltrim( $webfinger, 'acct:' );
-
-	$metadata['fediverse:creator'] = $webfinger;
 
 	return $metadata;
 }

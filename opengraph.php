@@ -484,16 +484,11 @@ function opengraph_meta_tags() {
 
 		foreach ( $value as $v ) {
 			// check if "strict mode" is enabled
-			if ( OPENGRAPH_STRICT_MODE === false ) {
-				// use "property" and "name"
-				printf(
-					'<meta property="%1$s" name="%1$s" content="%2$s" />' . PHP_EOL,
-					esc_attr( $key ),
-					esc_attr( $v )
-				);
-			} else {
-				// use "name" attribute for Twitter Cards
-				if ( stripos( $key, 'twitter:' ) === 0 ) {
+			if ( OPENGRAPH_STRICT_MODE === true ) {
+				if ( // use "name" attribute for Twitter Cards
+					str_starts_with( $key, 'twitter:' ) ||
+					str_starts_with( $key, 'fediverse:' )
+				) {
 					printf(
 						'<meta name="%1$s" content="%2$s" />' . PHP_EOL,
 						esc_attr( $key ),
@@ -506,6 +501,13 @@ function opengraph_meta_tags() {
 						esc_attr( $v )
 					);
 				}
+			} else {
+				// use "property" and "name"
+				printf(
+					'<meta property="%1$s" name="%1$s" content="%2$s" />' . PHP_EOL,
+					esc_attr( $key ),
+					esc_attr( $v )
+				);
 			}
 		}
 	}
@@ -634,4 +636,15 @@ function opengraph_trim_text( $text, $length = 55 ) {
 	$excerpt_more   = apply_filters( 'excerpt_more', ' [...]' );
 
 	return wp_trim_words( $text, $excerpt_length, $excerpt_more );
+}
+
+/**
+ * str_starts_with function for PHP < 8.0
+ *
+ * @see https://www.php.net/manual/en/function.str-starts-with
+ */
+if ( ! function_exists( 'str_starts_with' ) ) {
+	function str_starts_with( $haystack, $needle ) {
+		return 0 === strncmp( $haystack, $needle, \strlen( $needle ) );
+	}
 }

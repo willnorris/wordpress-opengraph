@@ -150,7 +150,7 @@ function opengraph_default_metadata() {
 	add_filter( 'twitter_creator', 'twitter_default_creator', 5 );
 
 	// fediverse creator metadata
-	add_filter( 'fediverse_creator', 'fediverse_default_creator' );
+	add_filter( 'fediverse_creator', 'fediverse_default_creator', 5 );
 }
 add_action( 'wp', 'opengraph_default_metadata' );
 
@@ -485,9 +485,9 @@ function twitter_default_creator( $creator ) {
  *
  * @see https://github.com/mastodon/mastodon/pull/30398
  */
-function fediverse_default_creator( $metadata ) {
+function fediverse_default_creator( $creator ) {
 	if ( ! is_singular() ) {
-		return $metadata;
+		return $creator;
 	}
 
 	$post      = get_queried_object();
@@ -495,15 +495,13 @@ function fediverse_default_creator( $metadata ) {
 	$webfinger = get_the_author_meta( 'fediverse', $author );
 
 	if ( ! $webfinger ) {
-		return $metadata;
+		return $creator;
 	}
 
 	$webfinger = ltrim( $webfinger, '@' );
 	$webfinger = ltrim( $webfinger, 'acct:' );
 
-	$metadata['fediverse:creator'] = $webfinger;
-
-	return $metadata;
+	return $webfinger;
 }
 
 

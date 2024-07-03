@@ -5,7 +5,7 @@
  * Description: Adds Open Graph metadata to your pages
  * Author: Will Norris
  * Author URI: https://willnorris.com/
- * Version: 1.11.3
+ * Version: 1.12.0
  * License: Apache License, Version 2.0
  * License URI: http://www.apache.org/licenses/LICENSE-2.0.html
  * Text Domain: opengraph
@@ -481,7 +481,7 @@ function twitter_default_creator( $creator ) {
 
 
 /**
- * Add Fediverse support
+ * Default fediverse creator.
  *
  * @see https://github.com/mastodon/mastodon/pull/30398
  */

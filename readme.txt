@@ -62,6 +62,9 @@ The plugin populates the meta 'name' attribute alongside the 'property' attribut
 
 Project maintained on github at [willnorris/wordpress-opengraph](https://github.com/willnorris/wordpress-opengraph).
 
+= version 1.12.0 (Jul 3, 2024) =
+ - support `<meta name="fediverse:creator" />`
+
 = version 1.11.3 (Jun 4, 2024) =
  - don't return description for password protected posts
 

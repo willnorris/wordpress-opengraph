@@ -5,7 +5,7 @@
  * Description: Adds Open Graph metadata to your pages
  * Author: Will Norris
  * Author URI: https://willnorris.com/
- * Version: 1.11.3
+ * Version: 1.12.0
  * License: Apache License, Version 2.0
  * License URI: http://www.apache.org/licenses/LICENSE-2.0.html
  * Text Domain: opengraph
@@ -108,6 +108,14 @@ function opengraph_metadata() {
 		$metadata[ "twitter:$property" ] = apply_filters( $filter, '' );
 	}
 
+	$fediverse_properties = array( 'creator' );
+
+	foreach ( $fediverse_properties as $property ) {
+		$filter = 'fediverse_' . $property;
+
+		$metadata[ "fediverse:$property" ] = apply_filters( $filter, '' );
+	}
+
 	return apply_filters( 'opengraph_metadata', $metadata );
 }
 
@@ -140,6 +148,9 @@ function opengraph_default_metadata() {
 	// twitter card metadata
 	add_filter( 'twitter_card', 'twitter_default_card', 5 );
 	add_filter( 'twitter_creator', 'twitter_default_creator', 5 );
+
+	// fediverse creator metadata
+	add_filter( 'fediverse_creator', 'fediverse_default_creator', 5 );
 }
 add_action( 'wp', 'opengraph_default_metadata' );
 
@@ -470,6 +481,31 @@ function twitter_default_creator( $creator ) {
 
 
 /**
+ * Default fediverse creator.
+ *
+ * @see https://github.com/mastodon/mastodon/pull/30398
+ */
+function fediverse_default_creator( $creator ) {
+	if ( ! is_singular() ) {
+		return $creator;
+	}
+
+	$post      = get_queried_object();
+	$author    = $post->post_author;
+	$webfinger = get_the_author_meta( 'fediverse', $author );
+
+	if ( ! $webfinger ) {
+		return $creator;
+	}
+
+	$webfinger = ltrim( $webfinger, '@' );
+	$webfinger = ltrim( $webfinger, 'acct:' );
+
+	return $webfinger;
+}
+
+
+/**
  * Output Open Graph <meta> tags in the page header.
  */
 function opengraph_meta_tags() {
@@ -482,16 +518,11 @@ function opengraph_meta_tags() {
 
 		foreach ( $value as $v ) {
 			// check if "strict mode" is enabled
-			if ( OPENGRAPH_STRICT_MODE === false ) {
-				// use "property" and "name"
-				printf(
-					'<meta property="%1$s" name="%1$s" content="%2$s" />' . PHP_EOL,
-					esc_attr( $key ),
-					esc_attr( $v )
-				);
-			} else {
-				// use "name" attribute for Twitter Cards
-				if ( stripos( $key, 'twitter:' ) === 0 ) {
+			if ( OPENGRAPH_STRICT_MODE === true ) {
+				if ( // use "name" attribute for Twitter Cards
+					str_starts_with( $key, 'twitter:' ) ||
+					str_starts_with( $key, 'fediverse:' )
+				) {
 					printf(
 						'<meta name="%1$s" content="%2$s" />' . PHP_EOL,
 						esc_attr( $key ),
@@ -504,6 +535,13 @@ function opengraph_meta_tags() {
 						esc_attr( $v )
 					);
 				}
+			} else {
+				// use "property" and "name"
+				printf(
+					'<meta property="%1$s" name="%1$s" content="%2$s" />' . PHP_EOL,
+					esc_attr( $key ),
+					esc_attr( $v )
+				);
 			}
 		}
 	}
@@ -576,6 +614,7 @@ function opengraph_article_metadata( $metadata ) {
 function opengraph_user_contactmethods( $user_contactmethods ) {
 	$user_contactmethods['twitter']  = __( 'Twitter', 'opengraph' );
 	$user_contactmethods['facebook'] = __( 'Facebook (Profile URL)', 'opengraph' );
+	$user_contactmethods['fediverse'] = __( 'Fediverse (username@host.tld)', 'opengraph' );
 
 	return $user_contactmethods;
 }
@@ -605,4 +644,15 @@ function opengraph_trim_text( $text, $length = 55 ) {
 	$excerpt_more   = apply_filters( 'excerpt_more', ' [...]' );
 
 	return wp_trim_words( $text, $excerpt_length, $excerpt_more );
+}
+
+/**
+ * str_starts_with function for PHP < 8.0
+ *
+ * @see https://www.php.net/manual/en/function.str-starts-with
+ */
+if ( ! function_exists( 'str_starts_with' ) ) {
+	function str_starts_with( $haystack, $needle ) {
+		return 0 === strncmp( $haystack, $needle, \strlen( $needle ) );
+	}
 }

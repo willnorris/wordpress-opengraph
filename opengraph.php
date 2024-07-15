@@ -5,7 +5,7 @@
  * Description: Adds Open Graph metadata to your pages
  * Author: Will Norris
  * Author URI: https://willnorris.com/
- * Version: 1.12.0
+ * Version: 1.12.1
  * License: Apache License, Version 2.0
  * License URI: http://www.apache.org/licenses/LICENSE-2.0.html
  * Text Domain: opengraph
@@ -499,7 +499,7 @@ function fediverse_default_creator( $creator ) {
 	}
 
 	$webfinger = ltrim( $webfinger, '@' );
-	$webfinger = ltrim( $webfinger, 'acct:' );
+	$webfinger = str_replace( 'acct:', '', $webfinger );
 
 	return $webfinger;
 }

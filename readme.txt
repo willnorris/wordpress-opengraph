@@ -3,7 +3,7 @@ Contributors: willnorris, pfefferle
 Tags: social, opengraph, ogp, facebook
 Requires at least: 2.3
 Tested up to: 6.5
-Stable tag: 1.12.0
+Stable tag: 1.12.1
 License: Apache License, Version 2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0.html
 
@@ -61,6 +61,9 @@ The plugin populates the meta 'name' attribute alongside the 'property' attribut
 == Changelog ==
 
 Project maintained on github at [willnorris/wordpress-opengraph](https://github.com/willnorris/wordpress-opengraph).
+
+= version 1.12.1 (Jul 15, 2024) =
+ - fix fediverse account normalization
 
 = version 1.12.0 (Jul 3, 2024) =
  - support `<meta name="fediverse:creator" />`

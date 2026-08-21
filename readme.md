@@ -3,7 +3,7 @@
 - Contributors: willnorris, pfefferle
 - Tags: social, opengraph, ogp, facebook
 - Requires at least: 2.3
-- Tested up to: 7.0
+- Tested up to: 7.1
 - Stable tag: 2.0.2
 - Requires PHP: 7.4
 - License: Apache License, 2.0

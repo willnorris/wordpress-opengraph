@@ -230,6 +230,19 @@ class Test_Opengraph extends Opengraph_TestCase {
 		$this->assertSame( array( 'Uncategorized' ), $metadata['article:section'] );
 		$this->assertSame( get_the_time( 'c', $post_id ), $metadata['article:published_time'] );
 		$this->assertSame( array( get_author_posts_url( get_post( $post_id )->post_author ) ), $metadata['article:author'] );
+
+		// Tags added by earlier callbacks are kept.
+		$custom = function ( $metadata ) {
+			$metadata['article:tag'][] = 'custom';
+
+			return $metadata;
+		};
+
+		add_filter( 'opengraph_metadata', $custom, 5 );
+		$metadata = $this->metadata_for( get_permalink( $post_id ) );
+		remove_filter( 'opengraph_metadata', $custom, 5 );
+
+		$this->assertEqualSets( array( 'custom', 'foo', 'bar' ), $metadata['article:tag'] );
 	}
 
 	/**

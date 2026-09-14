@@ -39,15 +39,20 @@ function opengraph_add_prefix( $output ) {
 	);
 	$prefixes = apply_filters( 'opengraph_prefixes', $prefixes );
 
-	$prefix_str = '';
-	foreach ( $prefixes as $k => $v ) {
-		$prefix_str .= $k . ': ' . $v . ' ';
-	}
-	$prefix_str = trim( $prefix_str );
+	$prefix_str = implode(
+		' ',
+		array_map(
+			function ( $k, $v ) {
+				return $k . ': ' . $v;
+			},
+			array_keys( $prefixes ),
+			$prefixes
+		)
+	);
 
-	if ( preg_match( '/(prefix\s*=\s*[\"|\'])/i', $output ) ) {
-		$output = preg_replace( '/(prefix\s*=\s*[\"|\'])/i', '${1}' . $prefix_str, $output );
-	} else {
+	$output = preg_replace( '/(prefix\s*=\s*[\"|\'])/i', '${1}' . $prefix_str, $output, -1, $count );
+
+	if ( ! $count ) {
 		$output .= ' prefix="' . esc_attr( $prefix_str ) . '"';
 	}
 
@@ -85,63 +90,55 @@ function opengraph_additional_prefixes( $prefixes ) {
 function opengraph_metadata() {
 	$metadata = array();
 
-	// Default properties defined at http://ogp.me/.
-	$properties = array(
-		// Required properties.
-		'title'       => '',
-		'type'        => '',
-		'image'       => array(),
-		'url'         => '',
+	// Namespace => filter prefix and default properties.
+	$namespaces = array(
+		// Default properties defined at http://ogp.me/.
+		'og'        => array(
+			'opengraph',
+			array(
+				// Required properties.
+				'title'       => '',
+				'type'        => '',
+				'image'       => array(),
+				'url'         => '',
 
-		// Optional properties.
-		'audio'       => array(),
-		'description' => '',
-		'determiner'  => '',
-		'locale'      => '',
-		'site_name'   => '',
-		'video'       => array(),
+				// Optional properties.
+				'audio'       => array(),
+				'description' => '',
+				'determiner'  => '',
+				'locale'      => '',
+				'site_name'   => '',
+				'video'       => array(),
+			),
+		),
+		'twitter'   => array(
+			'twitter',
+			array(
+				'card'    => '',
+				'creator' => '',
+			),
+		),
+		'fediverse' => array(
+			'fediverse',
+			array(
+				'creator' => array(),
+			),
+		),
 	);
 
-	foreach ( $properties as $property => $default ) {
-		$filter = 'opengraph_' . $property;
-
-		/**
-		 * Filter the Open Graph metadata.
-		 *
-		 * @param array $default The default value.
-		 */
-		$metadata[ "og:$property" ] = apply_filters( $filter, $default );
-	}
-
-	$twitter_properties = array(
-		'card'    => '',
-		'creator' => '',
-	);
-
-	foreach ( $twitter_properties as $property => $default ) {
-		$filter = 'twitter_' . $property;
-
-		/**
-		 * Filter the Twitter Card metadata.
-		 *
-		 * @param array $default The default value.
-		 */
-		$metadata[ "twitter:$property" ] = apply_filters( $filter, $default );
-	}
-
-	$fediverse_properties = array(
-		'creator' => array(),
-	);
-
-	foreach ( $fediverse_properties as $property => $default ) {
-		$filter = 'fediverse_' . $property;
-
-		/**
-		 * Filter the Fediverse metadata.
-		 *
-		 * @param array $default The default value.
-		 */
-		$metadata[ "fediverse:$property" ] = apply_filters( $filter, $default );
+	foreach ( $namespaces as $namespace => list( $filter_prefix, $properties ) ) {
+		foreach ( $properties as $property => $default ) {
+			/**
+			 * Filter a single metadata property.
+			 *
+			 * The dynamic portion of the hook name, `$filter_prefix`, is one of
+			 * `opengraph`, `twitter` or `fediverse`; `$property` is the property
+			 * name, e.g. `opengraph_title` or `twitter_card`.
+			 *
+			 * @param string|array $default The default value.
+			 */
+			$metadata[ "$namespace:$property" ] = apply_filters( "{$filter_prefix}_{$property}", $default );
+		}
 	}
 
 	/**
@@ -221,17 +218,11 @@ function opengraph_default_title( $title ) {
 	} elseif ( is_author() ) {
 		$author = get_queried_object();
 		$title  = $author->display_name;
-	} elseif ( is_category() && single_cat_title( '', false ) ) {
-		$title = single_cat_title( '', false );
-	} elseif ( is_tag() && single_tag_title( '', false ) ) {
-		$title = single_tag_title( '', false );
+	} elseif ( ( is_category() || is_tag() ) && single_term_title( '', false ) ) {
+		$title = single_term_title( '', false );
 	} elseif ( is_archive() && get_post_format() ) {
 		$title = get_post_format_string( get_post_format() );
-	} elseif (
-		is_archive() &&
-		function_exists( 'get_the_archive_title' ) &&
-		get_the_archive_title()
-	) { // New in version 4.1 to get all other archive titles.
+	} elseif ( is_archive() && get_the_archive_title() ) {
 		$title = get_the_archive_title();
 	}
 
@@ -278,20 +269,31 @@ function opengraph_default_image( $image = array() ) {
 		return $image;
 	}
 
-	if ( is_attachment() && wp_attachment_is_image() ) {
-		$id      = get_queried_object_id();
-		$image[] = current( wp_get_attachment_image_src( $id, 'large' ) ?: array() ); // phpcs:ignore
-	} elseif ( is_singular() && ! is_attachment() ) {
-		$id = get_queried_object_id();
+	$id = get_queried_object_id();
 
+	if ( is_attachment() && wp_attachment_is_image() ) {
+		$image[] = wp_get_attachment_image_url( $id, 'large' );
+	} elseif ( is_singular() && ! is_attachment() && has_post_thumbnail( $id ) ) {
 		// List post thumbnail first if this post has one.
-		if ( function_exists( 'has_post_thumbnail' ) && has_post_thumbnail( $id ) ) {
-			$thumbnail_id = get_post_thumbnail_id( $id );
-			$image[]      = current( wp_get_attachment_image_src( $thumbnail_id, 'large' ) ?: array() ); // phpcs:ignore
-		}
+		$image[] = wp_get_attachment_image_url( get_post_thumbnail_id( $id ), 'large' );
 	}
 
 	return array_unique( $image );
+}
+
+
+/**
+ * Check whether an image collector should look for more images.
+ *
+ * Shared guard for the collectors that inspect the content or attachments
+ * of a singular, non-attachment post.
+ *
+ * @param array $image The current list of images.
+ *
+ * @return bool True if more images are wanted, false otherwise.
+ */
+function opengraph_wants_more_images( $image ) {
+	return is_singular() && ! is_attachment() && count( $image ) < opengraph_max_images();
 }
 
 
@@ -303,33 +305,27 @@ function opengraph_default_image( $image = array() ) {
  * @return array The list of images.
  */
 function opengraph_block_image( $image = array() ) {
-	if (
-		! opengraph_site_supports_blocks() ||
-		count( $image ) >= opengraph_max_images() ||
-		! is_singular() ||
-		is_attachment()
-	) {
+	if ( ! opengraph_site_supports_blocks() || ! opengraph_wants_more_images( $image ) ) {
 		return $image;
 	}
+
+	$max_images = opengraph_max_images();
 
 	// Get the first image in the post content.
 	$blocks = parse_blocks( get_the_content( null, false ) );
 	foreach ( $blocks as $block ) {
-		if ( count( $image ) >= opengraph_max_images() ) {
+		if ( count( $image ) >= $max_images ) {
 			break;
 		}
 
 		if (
-			'core/image' === $block['blockName'] ||
-			'core/cover' === $block['blockName']
+			! in_array( $block['blockName'], array( 'core/image', 'core/cover' ), true ) ||
+			! isset( $block['attrs']['id'] )
 		) {
-			if ( ! isset( $block['attrs']['id'] ) ) {
-				continue;
-			}
-
-			$id      = $block['attrs']['id'];
-			$image[] = current( wp_get_attachment_image_src( $id, 'large' ) ?: array() ); // phpcs:ignore
+			continue;
 		}
+
+		$image[] = wp_get_attachment_image_url( $block['attrs']['id'], 'large' );
 	}
 
 	return array_unique( $image );
@@ -344,25 +340,23 @@ function opengraph_block_image( $image = array() ) {
  * @return array The list of images.
  */
 function opengraph_parsed_image( $image = array() ) {
-	// If someone calls that function directly, bail.
 	if (
 		! \class_exists( 'WP_HTML_Tag_Processor' ) ||
 		! opengraph_site_supports_blocks() ||
-		count( $image ) >= opengraph_max_images() ||
-		! is_singular() ||
-		is_attachment()
+		! opengraph_wants_more_images( $image )
 	) {
 		return $image;
 	}
 
-	$post_id = get_queried_object_id();
-	$base    = wp_upload_dir()['baseurl'];
-	$content = get_post_field( 'post_content', $post_id );
-	$tags    = new WP_HTML_Tag_Processor( $content );
+	$max_images = opengraph_max_images();
+	$post_id    = get_queried_object_id();
+	$base       = wp_get_upload_dir()['baseurl'];
+	$content    = get_post_field( 'post_content', $post_id );
+	$tags       = new WP_HTML_Tag_Processor( $content );
 
 	// This linter warning is a false positive - we have to re-count each time here as we modify $images.
 	// phpcs:ignore Squiz.PHP.DisallowSizeFunctionsInLoops.Found
-	while ( $tags->next_tag( 'img' ) && ( count( $image ) <= opengraph_max_images() ) ) {
+	while ( $tags->next_tag( 'img' ) && ( count( $image ) < $max_images ) ) {
 		$src = $tags->get_attribute( 'src' );
 
 		/*
@@ -382,14 +376,12 @@ function opengraph_parsed_image( $image = array() ) {
 		$img_id = attachment_url_to_postid( $src );
 
 		if ( 0 === $img_id ) {
-			$count  = 0;
 			$src    = strtok( $src, '?' );
 			$img_id = attachment_url_to_postid( $src );
 		}
 
 		if ( 0 === $img_id ) {
-			$count = 0;
-			$src   = preg_replace( '/-(?:\d+x\d+)(\.[a-zA-Z]+)$/', '$1', $src, 1, $count );
+			$src = preg_replace( '/-(?:\d+x\d+)(\.[a-zA-Z]+)$/', '$1', $src, 1, $count );
 			if ( $count > 0 ) {
 				$img_id = attachment_url_to_postid( $src );
 			}
@@ -401,7 +393,7 @@ function opengraph_parsed_image( $image = array() ) {
 		}
 
 		if ( 0 !== $img_id ) {
-			$image[] = current( wp_get_attachment_image_src( $img_id, 'large' ) ?: array() ); // phpcs:ignore
+			$image[] = wp_get_attachment_image_url( $img_id, 'large' );
 		}
 	}
 
@@ -417,41 +409,35 @@ function opengraph_parsed_image( $image = array() ) {
  * @return array The list of images.
  */
 function opengraph_attached_image( $image = array() ) {
-	$max_images = opengraph_max_images();
-
-	if (
-		count( $image ) >= $max_images ||
-		! is_singular() || is_attachment()
-	) {
+	if ( ! opengraph_wants_more_images( $image ) ) {
 		return $image;
 	}
 
-	$id = get_queried_object_id();
+	$max_images = opengraph_max_images();
 
+	// Full post objects (not just IDs) so the post and meta caches are primed
+	// for the wp_get_attachment_image_url() calls below.
 	$query = new WP_Query(
 		array(
-			'post_parent'    => $id,
+			'post_parent'    => get_queried_object_id(),
 			'post_status'    => 'inherit',
 			'post_type'      => 'attachment',
 			'post_mime_type' => 'image',
 			'order'          => 'ASC',
 			'orderby'        => 'menu_order ID',
-			'fields'         => 'ids',
 			'posts_per_page' => $max_images,
 		)
 	);
 
-	$image_ids = $query->get_posts();
-
 	// Get URLs for each image.
-	foreach ( $image_ids as $id ) {
-		if ( count( $image ) >= opengraph_max_images() ) {
+	foreach ( $query->posts as $attachment ) {
+		if ( count( $image ) >= $max_images ) {
 			break;
 		}
 
-		$thumbnail = wp_get_attachment_image_src( $id, 'large' );
-		if ( $thumbnail ) {
-			$image[] = $thumbnail[0];
+		$url = wp_get_attachment_image_url( $attachment->ID, 'large' );
+		if ( $url ) {
+			$image[] = $url;
 		}
 	}
 
@@ -473,18 +459,20 @@ function opengraph_fallback_image( $image = array() ) {
 	$max_images = opengraph_max_images();
 
 	// Try site icon.
-	if ( function_exists( 'get_site_icon_url' ) && has_site_icon() ) {
+	if ( has_site_icon() ) {
 		$image[] = get_site_icon_url( 512 );
 	}
 
 	// Try custom logo second.
 	if ( empty( $image ) ) {
-		$custom_logo = get_theme_mod( 'custom_logo' );
-		$image[]     = wp_get_attachment_image_src( $custom_logo, 'large' );
+		$custom_logo = wp_get_attachment_image_url( get_theme_mod( 'custom_logo' ), 'large' );
+		if ( $custom_logo ) {
+			$image[] = $custom_logo;
+		}
 	}
 
 	// Try header images.
-	if ( empty( $image ) && function_exists( 'get_uploaded_header_images' ) ) {
+	if ( empty( $image ) ) {
 		if ( is_random_header_image() ) {
 			foreach ( get_uploaded_header_images() as $header_image ) {
 				$image[] = $header_image['url'];
@@ -512,6 +500,27 @@ function opengraph_ensure_max_image( $image = array() ) {
 }
 
 /**
+ * Append the URLs of media attached to the queried post.
+ *
+ * @param string $type The media type, e.g. 'audio' or 'video'.
+ * @param array  $urls The current list of URLs.
+ *
+ * @return array The list of URLs.
+ */
+function opengraph_attached_media_urls( $type, $urls = array() ) {
+	if ( ! is_singular() ) {
+		return $urls;
+	}
+
+	foreach ( get_attached_media( $type, get_queried_object_id() ) as $attachment ) {
+		$urls[] = wp_get_attachment_url( $attachment->ID );
+	}
+
+	return $urls;
+}
+
+
+/**
  * Default audio property, using get_attached_media.
  *
  * @param array $audio The current list of audio files.
@@ -519,18 +528,7 @@ function opengraph_ensure_max_image( $image = array() ) {
  * @return array The list of audio files.
  */
 function opengraph_default_audio( $audio = array() ) {
-	$id          = get_queried_object_id();
-	$attachments = get_attached_media( 'audio', $id );
-
-	if ( empty( $attachments ) ) {
-		return $audio;
-	}
-
-	foreach ( $attachments as $attachment ) {
-		$audio[] = wp_get_attachment_url( $attachment->ID );
-	}
-
-	return $audio;
+	return opengraph_attached_media_urls( 'audio', $audio );
 }
 
 
@@ -542,18 +540,7 @@ function opengraph_default_audio( $audio = array() ) {
  * @return array The list of video files.
  */
 function opengraph_default_video( $video = array() ) {
-	$id          = get_queried_object_id();
-	$attachments = get_attached_media( 'video', $id );
-
-	if ( empty( $attachments ) ) {
-		return $video;
-	}
-
-	foreach ( $attachments as $attachment ) {
-		$video[] = wp_get_attachment_url( $attachment->ID );
-	}
-
-	return $video;
+	return opengraph_attached_media_urls( 'video', $video );
 }
 
 
@@ -619,23 +606,17 @@ function opengraph_default_description( $description = '', $length = 55 ) {
 	} elseif ( is_author() ) {
 		$id          = get_queried_object_id();
 		$description = get_user_meta( $id, 'description', true );
-	} elseif ( is_category() && category_description() ) {
-		$description = category_description();
-	} elseif ( is_tag() && tag_description() ) {
-		$description = tag_description();
-	} elseif (
-		is_archive() &&
-		function_exists( 'get_the_archive_description' ) &&
-		get_the_archive_description()
-	) { // New in version 4.1 to get all other archive descriptions.
+	} elseif ( ( is_category() || is_tag() ) && term_description() ) {
+		$description = term_description();
+	} elseif ( is_archive() && get_the_archive_description() ) {
 		$description = get_the_archive_description();
 	} else {
 		$description = get_bloginfo( 'description' );
 	}
 
-	// strip description to first 55 words.
-	$description = wp_strip_all_tags( strip_shortcodes( $description ) );
-	$description = opengraph_trim_text( $description, $length );
+	// Strip description to first 55 words. wp_trim_words() strips tags itself,
+	// but the `excerpt_more` filter may add HTML back, so strip once more after.
+	$description = opengraph_trim_text( strip_shortcodes( $description ), $length );
 
 	return wp_strip_all_tags( $description );
 }
@@ -669,24 +650,41 @@ function twitter_default_card( $card = '' ) {
 		return $card;
 	}
 
-	$card   = 'summary';
-	$images = apply_filters( 'opengraph_image', array() );
+	$card = 'summary';
 
 	// Show large image on...
-	if ( is_singular() ) {
-		if (
+	if (
+		is_singular() &&
+		(
 			// Gallery and image posts.
 			in_array( get_post_format(), array( 'image', 'gallery' ), true ) ||
-			// Posts with more than one image.
-			( is_array( $images ) && count( $images ) > 1 ) ||
 			// Posts with a post-thumbnail.
-			( function_exists( 'has_post_thumbnail' ) && has_post_thumbnail() )
-		) {
-			$card = 'summary_large_image';
-		}
+			has_post_thumbnail() ||
+			// Posts with more than one image. Checked last, since the image
+			// filter chain is the expensive part.
+			count( (array) apply_filters( 'opengraph_image', array() ) ) > 1
+		)
+	) {
+		$card = 'summary_large_image';
 	}
 
 	return $card;
+}
+
+
+/**
+ * Get a contact-method value of the author of the queried post.
+ *
+ * @param string $key The user meta key, e.g. 'twitter'.
+ *
+ * @return string The value, or an empty string outside singular views.
+ */
+function opengraph_queried_author_meta( $key ) {
+	if ( ! is_singular() ) {
+		return '';
+	}
+
+	return (string) get_the_author_meta( $key, get_queried_object()->post_author );
 }
 
 
@@ -700,13 +698,11 @@ function twitter_default_card( $card = '' ) {
  * @return string The creator.
  */
 function twitter_default_creator( $creator = '' ) {
-	if ( $creator || ! is_singular() ) {
+	if ( $creator ) {
 		return $creator;
 	}
 
-	$post    = get_queried_object();
-	$author  = $post->post_author;
-	$twitter = get_the_author_meta( 'twitter', $author );
+	$twitter = opengraph_queried_author_meta( 'twitter' );
 
 	if ( ! $twitter ) {
 		return $creator;
@@ -733,22 +729,13 @@ function twitter_default_creator( $creator = '' ) {
  * @return string The creator.
  */
 function fediverse_default_creator( $creator = '' ) {
-	if ( ! is_singular() ) {
-		return $creator;
-	}
-
-	$post      = get_queried_object();
-	$author    = $post->post_author;
-	$webfinger = get_the_author_meta( 'fediverse', $author );
+	$webfinger = opengraph_queried_author_meta( 'fediverse' );
 
 	if ( ! $webfinger ) {
 		return $creator;
 	}
 
-	$webfinger = ltrim( $webfinger, '@' );
-	$webfinger = str_replace( 'acct:', '', $webfinger );
-
-	return $webfinger;
+	return str_replace( 'acct:', '', ltrim( $webfinger, '@' ) );
 }
 
 
@@ -756,45 +743,29 @@ function fediverse_default_creator( $creator = '' ) {
  * Output Open Graph <meta> tags in the page header.
  */
 function opengraph_meta_tags() {
-	$metadata = opengraph_metadata();
-	foreach ( $metadata as $key => $value ) {
-		if ( empty( $key ) || empty( $value ) ) {
+	foreach ( opengraph_metadata() as $key => $value ) {
+		if ( empty( $key ) ) {
 			continue;
 		}
-		$value = (array) $value;
 
-		foreach ( $value as $v ) {
+		if ( OPENGRAPH_STRICT_MODE !== true ) {
+			// Use both the "property" and "name" attributes.
+			$template = '<meta property="%1$s" name="%1$s" content="%2$s" />';
+		} elseif ( str_starts_with( $key, 'twitter:' ) || str_starts_with( $key, 'fediverse:' ) ) {
+			// Use the "name" attribute for Twitter Cards and Fediverse.
+			$template = '<meta name="%1$s" content="%2$s" />';
+		} else {
+			// Use the "property" attribute for Open Graph.
+			$template = '<meta property="%1$s" content="%2$s" />';
+		}
+
+		foreach ( (array) $value as $v ) {
 			// Skip empty values.
 			if ( empty( $v ) ) {
 				continue;
 			}
 
-			// Check if "strict mode" is enabled.
-			if ( OPENGRAPH_STRICT_MODE === true ) {
-				if ( // Use "name" attribute for Twitter Cards.
-					str_starts_with( $key, 'twitter:' ) ||
-					str_starts_with( $key, 'fediverse:' )
-				) {
-					printf(
-						'<meta name="%1$s" content="%2$s" />' . PHP_EOL,
-						esc_attr( $key ),
-						esc_attr( $v )
-					);
-				} else { // Use "property" attribute for Open Graph.
-					printf(
-						'<meta property="%1$s" content="%2$s" />' . PHP_EOL,
-						esc_attr( $key ),
-						esc_attr( $v )
-					);
-				}
-			} else {
-				// Use the "property" and "name" attributes.
-				printf(
-					'<meta property="%1$s" name="%1$s" content="%2$s" />' . PHP_EOL,
-					esc_attr( $key ),
-					esc_attr( $v )
-				);
-			}
+			printf( $template . PHP_EOL, esc_attr( $key ), esc_attr( $v ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static template, values escaped.
 		}
 	}
 }
@@ -837,30 +808,27 @@ function opengraph_article_metadata( $metadata ) {
 		return $metadata;
 	}
 
-	$post   = get_queried_object();
-	$author = $post->post_author;
+	$post = get_queried_object();
 
-	// Check if page/post has tags.
-	$tags = wp_get_object_terms( $post->ID, 'post_tag' );
-	if ( $tags && is_array( $tags ) ) {
-		foreach ( $tags as $tag ) {
-			$metadata['article:tag'][] = $tag->name;
-		}
+	// Check if page/post has tags (cached lookup, primed by the main query).
+	$tags = get_the_terms( $post->ID, 'post_tag' );
+	if ( $tags && ! is_wp_error( $tags ) ) {
+		$metadata['article:tag'] = wp_list_pluck( $tags, 'name' );
 	}
 
 	// Check if page/post has categories.
-	$categories = wp_get_object_terms( $post->ID, 'category' );
-	if ( $categories && is_array( $categories ) ) {
-		$metadata['article:section'][] = current( $categories )->name;
+	$categories = get_the_category( $post->ID );
+	if ( $categories ) {
+		$metadata['article:section'][] = $categories[0]->name;
 	}
 
 	$metadata['article:published_time'] = get_the_time( 'c', $post->ID );
 	$metadata['article:modified_time']  = get_the_modified_time( 'c', $post->ID );
-	$metadata['article:author'][]       = get_author_posts_url( $author );
+	$metadata['article:author'][]       = get_author_posts_url( $post->post_author );
 
-	$facebook = get_the_author_meta( 'facebook', $author );
+	$facebook = opengraph_queried_author_meta( 'facebook' );
 
-	if ( ! empty( $facebook ) ) {
+	if ( $facebook ) {
 		$metadata['article:author'][] = $facebook;
 	}
 
@@ -932,11 +900,7 @@ function opengraph_max_images() {
 	$max_images = apply_filters( 'opengraph_max_images', OPENGRAPH_MAX_IMAGES );
 
 	// Max images can't be negative or zero.
-	if ( $max_images <= 0 ) {
-		$max_images = 1;
-	}
-
-	return $max_images;
+	return max( 1, (int) $max_images );
 }
 
 /**
@@ -945,26 +909,18 @@ function opengraph_max_images() {
  * @return boolean True if the site supports the block editor, false otherwise.
  */
 function opengraph_site_supports_blocks() {
-	$return = true;
-
-	if ( version_compare( get_bloginfo( 'version' ), '5.9', '<' ) ) {
-		$return = false;
-	} elseif ( function_exists( 'classicpress_version' ) ) {
-		$return = false;
-	} elseif (
-		! function_exists( 'register_block_type_from_metadata' ) ||
-		! function_exists( 'do_blocks' )
-	) {
-		$return = false;
-	}
+	$supports_blocks = version_compare( get_bloginfo( 'version' ), '5.9', '>=' ) &&
+		! function_exists( 'classicpress_version' ) &&
+		function_exists( 'register_block_type_from_metadata' ) &&
+		function_exists( 'do_blocks' );
 
 	/**
-	 * Allow plugins to disable block editor support,
-	 * thus disabling blocks registered by the OpenGraph plugin.
+	 * Allow plugins to disable block editor support, thus disabling the
+	 * block- and HTML-based image detection in the post content.
 	 *
 	 * @param boolean $supports_blocks True if the site supports the block editor, false otherwise.
 	 */
-	return apply_filters( 'opengraph_site_supports_blocks', $return );
+	return apply_filters( 'opengraph_site_supports_blocks', $supports_blocks );
 }
 
 

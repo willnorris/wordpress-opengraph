@@ -218,6 +218,29 @@ class Test_Opengraph_Images extends Opengraph_TestCase {
 	}
 
 	/**
+	 * Test content images are found without the loop globals.
+	 *
+	 * Plugins like The Events Calendar render their pages without setting up
+	 * `$pages`, which made the old `get_the_content()` based collector fatal.
+	 *
+	 * @see https://github.com/pfefferle/wordpress-opengraph/pull/39
+	 *
+	 * @covers ::opengraph_content_image_ids
+	 */
+	public function test_content_images_without_loop_globals() {
+		$image_id = $this->create_image();
+		$post_id  = $this->create_post( $this->image_block( $image_id ) );
+
+		$this->go_to( get_permalink( $post_id ) );
+		$GLOBALS['pages'] = null; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+		$GLOBALS['post']  = null; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+
+		$metadata = opengraph_metadata();
+
+		$this->assertSame( array( $this->image_url( $image_id ) ), $metadata['og:image'] );
+	}
+
+	/**
 	 * Test content images without a `wp-image-` class are resolved through their URL.
 	 *
 	 * @covers ::opengraph_image_tag_to_id

@@ -269,6 +269,8 @@ class Test_Opengraph_Images extends Opengraph_TestCase {
 			'<img src="https://example.org/external.jpg"/>' .
 			// Deleted attachment.
 			'<img class="wp-image-999999" src="' . wp_get_upload_dir()['baseurl'] . '/deleted.jpg"/>' .
+			// Class that only looks like the editor class.
+			'<img class="not-wp-image-' . $image_id . ' wp-image-' . $image_id . '0"/>' .
 			// Uploads URL that is not an attachment.
 			'<img src="' . wp_get_upload_dir()['baseurl'] . '/nope.jpg"/>' .
 			// No src at all.
@@ -318,6 +320,56 @@ class Test_Opengraph_Images extends Opengraph_TestCase {
 		add_filter( 'opengraph_max_images', '__return_zero' );
 		$this->assertCount( 1, $this->images_for( $post_id ) );
 		remove_filter( 'opengraph_max_images', '__return_zero' );
+	}
+
+	/**
+	 * Test unusable IDs do not use up a slot.
+	 *
+	 * @covers ::opengraph_image_ids
+	 */
+	public function test_unusable_ids_do_not_count() {
+		$post_id = $this->create_post();
+		$file_id = self::factory()->attachment->create_object(
+			array(
+				'file'           => 'document.pdf',
+				'post_mime_type' => 'application/pdf',
+			)
+		);
+		$content = '<img class="wp-image-999999"/><img class="wp-image-' . $file_id . '"/>';
+		$ids     = array();
+
+		for ( $i = 0; $i < 3; $i++ ) {
+			$ids[]    = $this->create_image();
+			$content .= $this->image_block( end( $ids ) );
+		}
+		wp_update_post(
+			array(
+				'ID'           => $post_id,
+				'post_content' => $content,
+			)
+		);
+
+		$this->assertSame( array_map( array( $this, 'image_url' ), $ids ), $this->images_for( $post_id ) );
+	}
+
+	/**
+	 * Test the plugin never emits more than the maximum, even with images
+	 * added by earlier filter callbacks.
+	 *
+	 * @covers ::opengraph_default_image
+	 */
+	public function test_default_image_is_capped() {
+		$post_id = $this->create_post( $this->image_block( $this->create_image() ) );
+
+		$prepend = function ( $image ) {
+			return array_merge( array( 'https://example.org/1.jpg', 'https://example.org/2.jpg', 'https://example.org/3.jpg', 'https://example.org/4.jpg' ), $image );
+		};
+
+		add_filter( 'opengraph_image', $prepend, 1 );
+		$images = $this->images_for( $post_id );
+		remove_filter( 'opengraph_image', $prepend, 1 );
+
+		$this->assertSame( array( 'https://example.org/1.jpg', 'https://example.org/2.jpg', 'https://example.org/3.jpg' ), $images );
 	}
 
 	/**

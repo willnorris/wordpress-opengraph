@@ -269,22 +269,18 @@ function opengraph_default_image( $image = array() ) {
 		return array( get_avatar_url( get_queried_object_id(), array( 'size' => 512 ) ) );
 	}
 
-	$limit = opengraph_max_images() - count( $image );
+	$max_images = opengraph_max_images();
+	$limit      = $max_images - count( $image );
 
-	if ( ! is_singular() || post_password_required() || $limit <= 0 ) {
-		return $image;
+	if ( is_singular() && ! post_password_required() && $limit > 0 ) {
+		foreach ( opengraph_image_ids( get_queried_object_id(), $limit ) as $id ) {
+			$image[] = wp_get_attachment_image_url( $id, 'large' );
+		}
 	}
 
-	$ids = opengraph_image_ids( get_queried_object_id(), $limit );
+	$image = array_values( array_unique( array_filter( $image ) ) );
 
-	// One query for all attachments instead of one per image.
-	_prime_post_caches( $ids, false, true );
-
-	foreach ( $ids as $id ) {
-		$image[] = wp_get_attachment_image_url( $id, 'large' );
-	}
-
-	return array_values( array_unique( array_filter( $image ) ) );
+	return array_slice( $image, 0, $max_images );
 }
 
 
@@ -292,8 +288,10 @@ function opengraph_default_image( $image = array() ) {
  * Get the attachment IDs of the images of a post.
  *
  * Walks the image sources in order (post thumbnail, content images, attached
- * images) and stops as soon as enough unique IDs are found, so the more
- * expensive sources only run when the cheaper ones did not fill the list.
+ * images) and stops as soon as enough unique image attachments are found, so
+ * the more expensive sources only run when the cheaper ones did not fill the
+ * list. IDs that do not belong to an image attachment (deleted, or not an
+ * image) are skipped and do not count toward the limit.
  *
  * @param int $post_id The post ID.
  * @param int $limit   The maximum number of IDs.
@@ -326,12 +324,15 @@ function opengraph_image_ids( $post_id, $limit ) {
 
 	foreach ( $sources as $source ) {
 		foreach ( call_user_func( $source, $post_id ) as $id ) {
-			if ( ! $id ) {
+			$id = (int) $id;
+
+			// Skip duplicates and anything that is not an image attachment,
+			// so they do not use up a slot.
+			if ( ! $id || isset( $ids[ $id ] ) || ! wp_attachment_is_image( $id ) ) {
 				continue;
 			}
 
-			// Keyed by ID, so duplicates are free.
-			$ids[ (int) $id ] = true;
+			$ids[ $id ] = true;
 
 			if ( count( $ids ) >= $limit ) { // phpcs:ignore Squiz.PHP.DisallowSizeFunctionsInLoops.Found -- $ids changes in the loop.
 				break 2;
@@ -368,7 +369,7 @@ function opengraph_thumbnail_image_ids( $post_id ) {
  * @return Generator<int> The attachment IDs.
  */
 function opengraph_content_image_ids( $post_id ) {
-	$tags = new WP_HTML_Tag_Processor( get_post_field( 'post_content', $post_id ) );
+	$tags = new WP_HTML_Tag_Processor( get_post_field( 'post_content', $post_id, 'raw' ) );
 
 	while ( $tags->next_tag( 'img' ) ) {
 		$id = opengraph_image_tag_to_id( $tags );
@@ -394,7 +395,7 @@ function opengraph_content_image_ids( $post_id ) {
 function opengraph_image_tag_to_id( $tags ) {
 	$class = $tags->get_attribute( 'class' );
 
-	if ( is_string( $class ) && preg_match( '/wp-image-([0-9]+)/i', $class, $matches ) ) {
+	if ( is_string( $class ) && preg_match( '/(?:^|\s)wp-image-([0-9]+)(?:\s|$)/i', $class, $matches ) ) {
 		return (int) $matches[1];
 	}
 
@@ -453,6 +454,7 @@ function opengraph_attachment_url_to_id( $src ) {
  * @return int[] The attachment IDs.
  */
 function opengraph_attached_image_ids( $post_id ) {
+	// Full post objects, so the post cache is primed for the checks that follow.
 	$query = new WP_Query(
 		array(
 			'post_parent'    => $post_id,
@@ -462,11 +464,10 @@ function opengraph_attached_image_ids( $post_id ) {
 			'order'          => 'ASC',
 			'orderby'        => 'menu_order ID',
 			'posts_per_page' => opengraph_max_images(),
-			'fields'         => 'ids',
 		)
 	);
 
-	return $query->posts;
+	return wp_list_pluck( $query->posts, 'ID' );
 }
 
 /**

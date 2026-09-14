@@ -821,9 +821,7 @@ function opengraph_article_metadata( $metadata ) {
 	// Check if page/post has tags (cached lookup, primed by the main query).
 	$tags = get_the_terms( $post->ID, 'post_tag' );
 	if ( $tags && ! is_wp_error( $tags ) ) {
-		foreach ( $tags as $tag ) {
-			$metadata['article:tag'][] = $tag->name;
-		}
+		$metadata['article:tag'] = wp_list_pluck( $tags, 'name' );
 	}
 
 	// Check if page/post has categories.

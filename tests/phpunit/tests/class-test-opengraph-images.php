@@ -238,6 +238,21 @@ class Test_Opengraph_Images extends Opengraph_TestCase {
 		$metadata = opengraph_metadata();
 
 		$this->assertSame( array( $this->image_url( $image_id ) ), $metadata['og:image'] );
+
+		// A password protected post stays protected without the globals, too.
+		wp_update_post(
+			array(
+				'ID'            => $post_id,
+				'post_password' => 'secret',
+			)
+		);
+		$this->go_to( get_permalink( $post_id ) );
+		$GLOBALS['pages'] = null; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+		$GLOBALS['post']  = null; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+
+		$metadata = opengraph_metadata();
+
+		$this->assertSame( array(), $metadata['og:image'] );
 	}
 
 	/**

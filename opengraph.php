@@ -272,8 +272,10 @@ function opengraph_default_image( $image = array() ) {
 	$max_images = opengraph_max_images();
 	$limit      = $max_images - count( $image );
 
-	if ( is_singular() && ! post_password_required() && $limit > 0 ) {
-		foreach ( opengraph_image_ids( get_queried_object_id(), $limit ) as $id ) {
+	$post_id = get_queried_object_id();
+
+	if ( is_singular() && ! post_password_required( $post_id ) && $limit > 0 ) {
+		foreach ( opengraph_image_ids( $post_id, $limit ) as $id ) {
 			$image[] = wp_get_attachment_image_url( $id, 'large' );
 		}
 	}
@@ -819,7 +821,7 @@ function opengraph_article_metadata( $metadata ) {
 	// Check if page/post has tags (cached lookup, primed by the main query).
 	$tags = get_the_terms( $post->ID, 'post_tag' );
 	if ( $tags && ! is_wp_error( $tags ) ) {
-		$metadata['article:tag'] = wp_list_pluck( $tags, 'name' );
+		$metadata['article:tag'] = array_merge( (array) ( $metadata['article:tag'] ?? array() ), wp_list_pluck( $tags, 'name' ) );
 	}
 
 	// Check if page/post has categories.

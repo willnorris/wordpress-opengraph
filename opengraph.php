@@ -164,11 +164,7 @@ function opengraph_default_metadata() {
 
 	// Image metadata attributes with fallbacks.
 	add_filter( 'opengraph_image', 'opengraph_default_image', 5 );
-	add_filter( 'opengraph_image', 'opengraph_block_image', 15 );
-	add_filter( 'opengraph_image', 'opengraph_parsed_image', 25 );
-	add_filter( 'opengraph_image', 'opengraph_attached_image', 25 );
 	add_filter( 'opengraph_image', 'opengraph_fallback_image', 35 );
-	add_filter( 'opengraph_image', 'opengraph_ensure_max_image', 999 );
 
 	add_filter( 'opengraph_description', 'opengraph_default_description', 5 );
 	add_filter( 'opengraph_locale', 'opengraph_default_locale', 5 );
@@ -256,7 +252,10 @@ function opengraph_default_type( $type = '' ) {
 
 
 /**
- * Default image property, using the post-thumbnail and any attached images.
+ * Default image property.
+ *
+ * The avatar on author pages, otherwise the images of the queried post, see
+ * opengraph_image_ids().
  *
  * @param array $image The current list of images.
  *
@@ -265,186 +264,211 @@ function opengraph_default_type( $type = '' ) {
 function opengraph_default_image( $image = array() ) {
 	// Show avatar on profile pages.
 	if ( is_author() ) {
-		return array( get_avatar_url( get_the_author_meta( 'ID' ), array( 'size' => 512 ) ) );
+		return array( get_avatar_url( get_queried_object_id(), array( 'size' => 512 ) ) );
 	}
 
-	if ( count( $image ) >= opengraph_max_images() ) {
+	$limit = opengraph_max_images() - count( $image );
+
+	if ( ! is_singular() || post_password_required() || $limit <= 0 ) {
 		return $image;
 	}
 
-	$id = get_queried_object_id();
+	$ids = opengraph_image_ids( get_queried_object_id(), $limit );
 
-	if ( is_attachment() && wp_attachment_is_image() ) {
+	// One query for all attachments instead of one per image.
+	_prime_post_caches( $ids, false, true );
+
+	foreach ( $ids as $id ) {
 		$image[] = wp_get_attachment_image_url( $id, 'large' );
-	} elseif ( is_singular() && ! is_attachment() && has_post_thumbnail( $id ) ) {
-		// List post thumbnail first if this post has one.
-		$image[] = wp_get_attachment_image_url( get_post_thumbnail_id( $id ), 'large' );
 	}
 
-	return array_unique( $image );
+	return array_values( array_unique( array_filter( $image ) ) );
 }
 
 
 /**
- * Check whether an image collector should look for more images.
+ * Get the attachment IDs of the images of a post.
  *
- * Shared guard for the collectors that inspect the content or attachments
- * of a singular, non-attachment post.
+ * Walks the image sources in order (post thumbnail, content images, attached
+ * images) and stops as soon as enough unique IDs are found, so the more
+ * expensive sources only run when the cheaper ones did not fill the list.
  *
- * @param array $image The current list of images.
+ * @param int $post_id The post ID.
+ * @param int $limit   The maximum number of IDs.
  *
- * @return bool True if more images are wanted, false otherwise.
+ * @return int[] The attachment IDs.
  */
-function opengraph_wants_more_images( $image ) {
-	return is_singular() && ! is_attachment() && count( $image ) < opengraph_max_images();
-}
-
-
-/**
- * Block image property, using the first image in the post content.
- *
- * @param array $image The current list of images.
- *
- * @return array The list of images.
- */
-function opengraph_block_image( $image = array() ) {
-	if ( ! opengraph_site_supports_blocks() || ! opengraph_wants_more_images( $image ) ) {
-		return $image;
+function opengraph_image_ids( $post_id, $limit ) {
+	if ( is_attachment() ) {
+		return wp_attachment_is_image( $post_id ) ? array( $post_id ) : array();
 	}
 
-	$max_images = opengraph_max_images();
+	/**
+	 * Filter the image sources of a post.
+	 *
+	 * Each source is a callable that takes the post ID and returns (or yields)
+	 * attachment IDs, most relevant first.
+	 *
+	 * @param callable[] $sources The image sources, in order.
+	 */
+	$sources = apply_filters(
+		'opengraph_image_sources',
+		array(
+			'opengraph_thumbnail_image_ids',
+			'opengraph_content_image_ids',
+			'opengraph_attached_image_ids',
+		)
+	);
 
-	// Get the first image in the post content.
-	$blocks = parse_blocks( get_the_content( null, false ) );
-	foreach ( $blocks as $block ) {
-		if ( count( $image ) >= $max_images ) {
-			break;
-		}
+	$ids = array();
 
-		if (
-			! in_array( $block['blockName'], array( 'core/image', 'core/cover' ), true ) ||
-			! isset( $block['attrs']['id'] )
-		) {
-			continue;
-		}
+	foreach ( $sources as $source ) {
+		foreach ( call_user_func( $source, $post_id ) as $id ) {
+			if ( ! $id ) {
+				continue;
+			}
 
-		$image[] = wp_get_attachment_image_url( $block['attrs']['id'], 'large' );
-	}
+			// Keyed by ID, so duplicates are free.
+			$ids[ (int) $id ] = true;
 
-	return array_unique( $image );
-}
-
-
-/**
- * Parse images in the HTML content.
- *
- * @param array $image The current list of images.
- *
- * @return array The list of images.
- */
-function opengraph_parsed_image( $image = array() ) {
-	if (
-		! \class_exists( 'WP_HTML_Tag_Processor' ) ||
-		! opengraph_site_supports_blocks() ||
-		! opengraph_wants_more_images( $image )
-	) {
-		return $image;
-	}
-
-	$max_images = opengraph_max_images();
-	$post_id    = get_queried_object_id();
-	$base       = wp_get_upload_dir()['baseurl'];
-	$content    = get_post_field( 'post_content', $post_id );
-	$tags       = new WP_HTML_Tag_Processor( $content );
-
-	// This linter warning is a false positive - we have to re-count each time here as we modify $images.
-	// phpcs:ignore Squiz.PHP.DisallowSizeFunctionsInLoops.Found
-	while ( $tags->next_tag( 'img' ) && ( count( $image ) < $max_images ) ) {
-		$src = $tags->get_attribute( 'src' );
-
-		/*
-		 * If the img source is in our uploads dir, get the
-		 * associated ID. Note: if there's a -500x500
-		 * type suffix, we remove it, but we try the original
-		 * first in case the original image is actually called
-		 * that. Likewise, we try adding the -scaled suffix for
-		 * the case that this is a small version of an image
-		 * that was big enough to get scaled down on upload:
-		 * https://make.wordpress.org/core/2019/10/09/introducing-handling-of-big-images-in-wordpress-5-3/
-		 */
-		if ( null === $src || ! str_starts_with( $src, $base ) ) {
-			continue;
-		}
-
-		$img_id = attachment_url_to_postid( $src );
-
-		if ( 0 === $img_id ) {
-			$src    = strtok( $src, '?' );
-			$img_id = attachment_url_to_postid( $src );
-		}
-
-		if ( 0 === $img_id ) {
-			$src = preg_replace( '/-(?:\d+x\d+)(\.[a-zA-Z]+)$/', '$1', $src, 1, $count );
-			if ( $count > 0 ) {
-				$img_id = attachment_url_to_postid( $src );
+			if ( count( $ids ) >= $limit ) { // phpcs:ignore Squiz.PHP.DisallowSizeFunctionsInLoops.Found -- $ids changes in the loop.
+				break 2;
 			}
 		}
-
-		if ( 0 === $img_id ) {
-			$src    = preg_replace( '/(\.[a-zA-Z]+)$/', '-scaled$1', $src );
-			$img_id = attachment_url_to_postid( $src );
-		}
-
-		if ( 0 !== $img_id ) {
-			$image[] = wp_get_attachment_image_url( $img_id, 'large' );
-		}
 	}
 
-	return array_unique( $image );
+	return array_keys( $ids );
 }
 
 
 /**
- * Attached images.
+ * Image source: the post thumbnail.
  *
- * @param array $image The current list of images.
+ * @param int $post_id The post ID.
  *
- * @return array The list of images.
+ * @return int[] The attachment IDs.
  */
-function opengraph_attached_image( $image = array() ) {
-	if ( ! opengraph_wants_more_images( $image ) ) {
-		return $image;
+function opengraph_thumbnail_image_ids( $post_id ) {
+	return has_post_thumbnail( $post_id ) ? array( get_post_thumbnail_id( $post_id ) ) : array();
+}
+
+
+/**
+ * Image source: the `<img>` tags in the post content.
+ *
+ * One pass over the raw post content covers images inserted through the
+ * block editor (image, cover, gallery, media & text, nested blocks) as well
+ * as classic editor content. IDs are yielded one by one, so the caller can
+ * stop early without resolving the remaining images.
+ *
+ * @param int $post_id The post ID.
+ *
+ * @return Generator<int> The attachment IDs.
+ */
+function opengraph_content_image_ids( $post_id ) {
+	if ( ! \class_exists( 'WP_HTML_Tag_Processor' ) ) {
+		return;
 	}
 
-	$max_images = opengraph_max_images();
+	$tags = new WP_HTML_Tag_Processor( get_post_field( 'post_content', $post_id ) );
 
-	// Full post objects (not just IDs) so the post and meta caches are primed
-	// for the wp_get_attachment_image_url() calls below.
+	while ( $tags->next_tag( 'img' ) ) {
+		$id = opengraph_image_tag_to_id( $tags );
+
+		if ( $id ) {
+			yield $id;
+		}
+	}
+}
+
+
+/**
+ * Get the attachment ID of an `<img>` tag.
+ *
+ * The editor adds a `wp-image-{id}` class to every inserted image, which is
+ * what core itself uses to look up attachments in the content. Only images
+ * without that class are resolved through their URL, which is expensive.
+ *
+ * @param WP_HTML_Tag_Processor $tags The tag processor, positioned on an `<img>` tag.
+ *
+ * @return int The attachment ID, or 0 if none was found.
+ */
+function opengraph_image_tag_to_id( $tags ) {
+	$class = $tags->get_attribute( 'class' );
+
+	if ( is_string( $class ) && preg_match( '/wp-image-([0-9]+)/i', $class, $matches ) ) {
+		return (int) $matches[1];
+	}
+
+	$src = $tags->get_attribute( 'src' );
+
+	if ( ! is_string( $src ) || ! str_starts_with( $src, wp_get_upload_dir()['baseurl'] ) ) {
+		return 0;
+	}
+
+	return opengraph_attachment_url_to_id( $src );
+}
+
+
+/**
+ * Get the attachment ID for an image URL in the uploads directory.
+ *
+ * Tries the URL as is first, then without query string, then without a
+ * `-500x500` size suffix (in case the original is not actually called that),
+ * and finally with a `-scaled` suffix for images that were big enough to get
+ * scaled down on upload:
+ * https://make.wordpress.org/core/2019/10/09/introducing-handling-of-big-images-in-wordpress-5-3/
+ *
+ * @param string $src The image URL.
+ *
+ * @return int The attachment ID, or 0 if none was found.
+ */
+function opengraph_attachment_url_to_id( $src ) {
+	$img_id = attachment_url_to_postid( $src );
+
+	if ( 0 === $img_id ) {
+		$src    = strtok( $src, '?' );
+		$img_id = attachment_url_to_postid( $src );
+	}
+
+	if ( 0 === $img_id ) {
+		$src = preg_replace( '/-(?:\d+x\d+)(\.[a-zA-Z]+)$/', '$1', $src, 1, $count );
+		if ( $count > 0 ) {
+			$img_id = attachment_url_to_postid( $src );
+		}
+	}
+
+	if ( 0 === $img_id ) {
+		$src    = preg_replace( '/(\.[a-zA-Z]+)$/', '-scaled$1', $src );
+		$img_id = attachment_url_to_postid( $src );
+	}
+
+	return $img_id;
+}
+
+
+/**
+ * Image source: the images attached to the post.
+ *
+ * @param int $post_id The post ID.
+ *
+ * @return int[] The attachment IDs.
+ */
+function opengraph_attached_image_ids( $post_id ) {
 	$query = new WP_Query(
 		array(
-			'post_parent'    => get_queried_object_id(),
+			'post_parent'    => $post_id,
 			'post_status'    => 'inherit',
 			'post_type'      => 'attachment',
 			'post_mime_type' => 'image',
 			'order'          => 'ASC',
 			'orderby'        => 'menu_order ID',
-			'posts_per_page' => $max_images,
+			'posts_per_page' => opengraph_max_images(),
+			'fields'         => 'ids',
 		)
 	);
 
-	// Get URLs for each image.
-	foreach ( $query->posts as $attachment ) {
-		if ( count( $image ) >= $max_images ) {
-			break;
-		}
-
-		$url = wp_get_attachment_image_url( $attachment->ID, 'large' );
-		if ( $url ) {
-			$image[] = $url;
-		}
-	}
-
-	return array_unique( $image );
+	return $query->posts;
 }
 
 /**
@@ -489,17 +513,6 @@ function opengraph_fallback_image( $image = array() ) {
 	}
 
 	return array_unique( $image );
-}
-
-/**
- * Ensure the image count does not exceed the maximum.
- *
- * @param array $image The current list of images.
- *
- * @return array The list of images.
- */
-function opengraph_ensure_max_image( $image = array() ) {
-	return array_slice( $image, 0, opengraph_max_images() );
 }
 
 /**
@@ -896,27 +909,6 @@ function opengraph_max_images() {
 	// Max images can't be negative or zero.
 	return max( 1, (int) $max_images );
 }
-
-/**
- * Check if a site supports the block editor.
- *
- * @return boolean True if the site supports the block editor, false otherwise.
- */
-function opengraph_site_supports_blocks() {
-	$supports_blocks = version_compare( get_bloginfo( 'version' ), '5.9', '>=' ) &&
-		! function_exists( 'classicpress_version' ) &&
-		function_exists( 'register_block_type_from_metadata' ) &&
-		function_exists( 'do_blocks' );
-
-	/**
-	 * Allow plugins to disable block editor support, thus disabling the
-	 * block- and HTML-based image detection in the post content.
-	 *
-	 * @param boolean $supports_blocks True if the site supports the block editor, false otherwise.
-	 */
-	return apply_filters( 'opengraph_site_supports_blocks', $supports_blocks );
-}
-
 
 if ( ! function_exists( 'str_starts_with' ) ) {
 	/**

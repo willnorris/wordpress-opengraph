@@ -135,9 +135,12 @@ function opengraph_metadata() {
 			 * `opengraph`, `twitter` or `fediverse`; `$property` is the property
 			 * name, e.g. `opengraph_title` or `twitter_card`.
 			 *
-			 * @param string|array $default The default value.
+			 * @param string|array $default  The default value.
+			 * @param array        $metadata The metadata collected so far. Open Graph
+			 *                               properties are collected first, so the
+			 *                               Twitter and Fediverse filters can read them.
 			 */
-			$metadata[ "$namespace:$property" ] = apply_filters( "{$filter_prefix}_{$property}", $default );
+			$metadata[ "$namespace:$property" ] = apply_filters( "{$filter_prefix}_{$property}", $default, $metadata );
 		}
 	}
 
@@ -183,7 +186,7 @@ function opengraph_default_metadata() {
 	add_filter( 'opengraph_metadata', 'opengraph_article_metadata' );
 
 	// twitter card metadata.
-	add_filter( 'twitter_card', 'twitter_default_card', 5 );
+	add_filter( 'twitter_card', 'twitter_default_card', 5, 2 );
 	add_filter( 'twitter_creator', 'twitter_default_creator', 5 );
 
 	// fediverse creator metadata.
@@ -641,11 +644,12 @@ function opengraph_default_locale( $locale = '' ) {
 /**
  * Default twitter-card type.
  *
- * @param string $card The current card type.
+ * @param string $card     The current card type.
+ * @param array  $metadata The metadata collected so far, including `og:image`.
  *
  * @return string The card type.
  */
-function twitter_default_card( $card = '' ) {
+function twitter_default_card( $card = '', $metadata = array() ) {
 	if ( $card ) {
 		return $card;
 	}
@@ -660,15 +664,34 @@ function twitter_default_card( $card = '' ) {
 			in_array( get_post_format(), array( 'image', 'gallery' ), true ) ||
 			// Posts with a post-thumbnail.
 			has_post_thumbnail() ||
-			// Posts with more than one image. Checked last, since the image
-			// filter chain is the expensive part.
-			count( (array) apply_filters( 'opengraph_image', array() ) ) > 1
+			// Posts with more than one image.
+			count( twitter_card_images( $metadata ) ) > 1
 		)
 	) {
 		$card = 'summary_large_image';
 	}
 
 	return $card;
+}
+
+
+/**
+ * Get the Open Graph images for the Twitter card decision.
+ *
+ * Reads `og:image` from the metadata collected by opengraph_metadata(). Only
+ * when the filter is applied on its own, without that context, is the
+ * `opengraph_image` filter chain run again.
+ *
+ * @param array $metadata The metadata collected so far.
+ *
+ * @return array The list of images.
+ */
+function twitter_card_images( $metadata ) {
+	if ( ! isset( $metadata['og:image'] ) ) {
+		$metadata['og:image'] = apply_filters( 'opengraph_image', array() );
+	}
+
+	return (array) $metadata['og:image'];
 }
 
 

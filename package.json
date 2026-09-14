@@ -7,8 +7,10 @@
     "@wordpress/env": "^11.8.1"
   },
   "scripts": {
-    "env:start": "wp-env start",
-    "env:stop": "wp-env stop",
-    "env:destroy": "wp-env destroy"
+    "env": "npx wp-env",
+    "env:start": "npx wp-env start",
+    "env:stop": "npx wp-env stop",
+    "env:destroy": "npx wp-env destroy",
+    "env:test": "npx wp-env run tests-cli --env-cwd=\"wp-content/plugins/opengraph\" vendor/bin/phpunit"
   }
 }

@@ -14,7 +14,9 @@
         "wp-coding-standards/wpcs": "dev-develop",
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0.0",
         "sirbrillig/phpcs-variable-analysis": "^3.0",
-        "phpcsstandards/phpcsextra": "^1.1.0"
+        "phpcsstandards/phpcsextra": "^1.1.0",
+        "phpunit/phpunit": "^9.6.33",
+        "yoast/phpunit-polyfills": "^4.0"
     },
     "config": {
         "allow-plugins": true
@@ -22,7 +24,23 @@
     "allow-plugins": {
         "composer/installers": true
     },
-	"extra": {
+    "extra": {
         "installer-name": "opengraph"
+    },
+    "scripts": {
+        "test": [
+            "composer install",
+            "bin/install-wp-tests.sh opengraph-test root opengraph-test test-db latest true",
+            "vendor/bin/phpunit"
+        ],
+        "test:wp-env": [
+            "npx wp-env run tests-cli --env-cwd=\"wp-content/plugins/opengraph\" vendor/bin/phpunit"
+        ],
+        "lint": [
+            "vendor/bin/phpcs"
+        ],
+        "lint:fix": [
+            "vendor/bin/phpcbf"
+        ]
     }
 }

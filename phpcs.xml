@@ -16,7 +16,7 @@
 	<rule ref="PHPCompatibility"/>
 	<config name="testVersion" value="7.4-"/>
 	<rule ref="PHPCompatibilityWP"/>
-	<config name="minimum_supported_wp_version" value="2.3"/>
+	<config name="minimum_supported_wp_version" value="6.2"/>
 
 	<config name="text_domain" value="opengraph,default"/>
 

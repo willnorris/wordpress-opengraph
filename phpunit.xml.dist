@@ -1,0 +1,16 @@
+<phpunit
+	bootstrap="tests/phpunit/bootstrap.php"
+	backupGlobals="false"
+	colors="true"
+	>
+	<testsuites>
+		<testsuite name="OpenGraph">
+			<directory prefix="class-test-" suffix=".php">./tests/phpunit/tests</directory>
+		</testsuite>
+	</testsuites>
+	<coverage>
+		<include>
+			<file>./opengraph.php</file>
+		</include>
+	</coverage>
+</phpunit>

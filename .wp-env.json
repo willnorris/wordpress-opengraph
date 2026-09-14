@@ -1,15 +1,23 @@
 {
-  "core": null,
-  "plugins": [
-    "."
-  ],
-  "port": 8817,
-  "testsPort": 8818,
-  "config": {
-    "WP_DEBUG": true,
-    "WP_DEBUG_LOG": true
-  },
-  "mappings": {
-    "wp-content/plugins/opengraph": "."
-  }
+	"core": null,
+	"plugins": [ "." ],
+	"port": 8819,
+	"testsPort": 8820,
+	"config": {
+		"WP_DEBUG": true,
+		"WP_DEBUG_LOG": true
+	},
+	"env": {
+		"tests": {
+			"config": {
+				"WP_ENVIRONMENT_TYPE": "production"
+			},
+			"mappings": {
+				"wp-content/plugins/opengraph": "."
+			}
+		}
+	},
+	"lifecycleScripts": {
+		"afterStart": "npx wp-env run cli wp rewrite structure /%year%/%monthnum%/%postname%/"
+	}
 }

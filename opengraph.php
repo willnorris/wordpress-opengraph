@@ -50,7 +50,7 @@ function opengraph_add_prefix( $output ) {
 		)
 	);
 
-	$output = preg_replace( '/(prefix\s*=\s*[\"|\'])/i', '${1}' . $prefix_str, $output, -1, $count );
+	$output = preg_replace( '/(prefix\s*=\s*[\"|\'])/i', '${1}' . $prefix_str . ' ', $output, -1, $count );
 
 	if ( ! $count ) {
 		$output .= ' prefix="' . esc_attr( $prefix_str ) . '"';

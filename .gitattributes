@@ -1,10 +1,18 @@
-.git export-ignore
-.gitignore export-ignore
-.github export-ignore
-.gitattributes export-ignore
-.wordpress-org export-ignore
-.editorconfig export-ignore
-composer.json export-ignore
-.wp-env.json export-ignore
-package.json export-ignore
-phpcs.xml export-ignore
+# Distribution ignores (excluded from archives)
+# Dotfiles and directories
+/.editorconfig       export-ignore
+/.gitattributes      export-ignore
+/.github/            export-ignore
+/.gitignore          export-ignore
+/.wordpress-org/     export-ignore
+/.wp-env.json        export-ignore
+
+# Build and config files
+/bin/                export-ignore
+/composer.json       export-ignore
+/package.json        export-ignore
+/phpcs.xml           export-ignore
+/phpunit.xml.dist    export-ignore
+
+# Tests
+/tests/              export-ignore

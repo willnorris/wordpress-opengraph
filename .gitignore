@@ -1,5 +1,8 @@
-
+/node_modules/
 /vendor/
 .DS_Store
+.phpunit.cache
+.phpunit.result.cache
 .vscode
+.wp-env.override.json
 composer.lock

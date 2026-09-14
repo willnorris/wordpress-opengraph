@@ -8,6 +8,8 @@
  * Version: 2.0.2
  * License: Apache License, Version 2.0
  * License URI: http://www.apache.org/licenses/LICENSE-2.0.html
+ * Requires at least: 6.2
+ * Requires PHP: 7.4
  * Text Domain: opengraph
  *
  * @package opengraph
@@ -366,10 +368,6 @@ function opengraph_thumbnail_image_ids( $post_id ) {
  * @return Generator<int> The attachment IDs.
  */
 function opengraph_content_image_ids( $post_id ) {
-	if ( ! \class_exists( 'WP_HTML_Tag_Processor' ) ) {
-		return;
-	}
-
 	$tags = new WP_HTML_Tag_Processor( get_post_field( 'post_content', $post_id ) );
 
 	while ( $tags->next_tag( 'img' ) ) {
@@ -908,20 +906,4 @@ function opengraph_max_images() {
 
 	// Max images can't be negative or zero.
 	return max( 1, (int) $max_images );
-}
-
-if ( ! function_exists( 'str_starts_with' ) ) {
-	/**
-	 * `str_starts_with` function for PHP < 8.0.
-	 *
-	 * @see https://www.php.net/manual/en/function.str-starts-with
-	 *
-	 * @param string $haystack The string to search in.
-	 * @param string $needle   The string to search for.
-	 *
-	 * @return bool True if the string starts with the needle, false otherwise.
-	 */
-	function str_starts_with( $haystack, $needle ) {
-		return 0 === strncmp( $haystack, $needle, \strlen( $needle ) );
-	}
 }

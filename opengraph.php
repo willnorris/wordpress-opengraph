@@ -644,6 +644,10 @@ function opengraph_default_locale( $locale = '' ) {
 /**
  * Default twitter-card type.
  *
+ * Twitter takes the image from `og:image`, so the card type only depends on
+ * whether a singular post has one: `summary_large_image` if it does,
+ * `summary` otherwise.
+ *
  * @param string $card     The current card type.
  * @param array  $metadata The metadata collected so far, including `og:image`.
  *
@@ -654,44 +658,11 @@ function twitter_default_card( $card = '', $metadata = array() ) {
 		return $card;
 	}
 
-	$card = 'summary';
-
-	// Show large image on...
-	if (
-		is_singular() &&
-		(
-			// Gallery and image posts.
-			in_array( get_post_format(), array( 'image', 'gallery' ), true ) ||
-			// Posts with a post-thumbnail.
-			has_post_thumbnail() ||
-			// Posts with more than one image.
-			count( twitter_card_images( $metadata ) ) > 1
-		)
-	) {
-		$card = 'summary_large_image';
+	if ( is_singular() && ! empty( $metadata['og:image'] ) ) {
+		return 'summary_large_image';
 	}
 
-	return $card;
-}
-
-
-/**
- * Get the Open Graph images for the Twitter card decision.
- *
- * Reads `og:image` from the metadata collected by opengraph_metadata(). Only
- * when the filter is applied on its own, without that context, is the
- * `opengraph_image` filter chain run again.
- *
- * @param array $metadata The metadata collected so far.
- *
- * @return array The list of images.
- */
-function twitter_card_images( $metadata ) {
-	if ( ! isset( $metadata['og:image'] ) ) {
-		$metadata['og:image'] = apply_filters( 'opengraph_image', array() );
-	}
-
-	return (array) $metadata['og:image'];
+	return 'summary';
 }
 
 
